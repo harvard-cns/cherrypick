@@ -4,30 +4,37 @@ import subprocess
 import fcntl
 import os
 import select
+import sys
+import time
 
+DEBUG=False
 
-class Command:
-    def __init__(self, ssh, command):
-        self._ssh = ssh
+class Command(object):
+    def __init__(self, command):
+        self._ssh = None
         self._cmd = command.split(" ")
-        self.start()
 
-    def start(self):
+    def start(self, ssh):
         """
         Start the command by executing it on the remote ssh server.
         stdout and stderr are set to nonblocking so we can read off of
         the server while performing other operations
         """
+        self._ssh = ssh
+
         def nonblock(fd):
             fl = fcntl.fcntl(fd, fcntl.F_GETFL)
             fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
         def run_cmd(ssh, command):
-            print "Executing %s" % command
-            print "Executing %s" % " ".join( ["ssh", "-t", "-t", ssh.vm(),
-                '--'] + command)
+            if DEBUG:
+                print "Executing %s" % " ".join( ["ssh",
+                    "-oStrictHostKeyChecking=no", "-t", "-t", ssh.vm(),
+                    '--'] + command)
+
             return subprocess.Popen(
-                    ["ssh", "-t", "-t", ssh.vm(), '--'] + command,
+                    ["ssh", "-oStrictHostKeyChecking=no", "-t", "-t",
+                        ssh.vm(), '--'] + command,
                     stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
         def monitor_process(p, queue):
@@ -86,6 +93,21 @@ class Command:
     def __lshift__(self, cmd):
         return (self._ssh << cmd)
 
+
+class WaitUntilFinished(Command):
+    def start(self, ssh):
+        super(WaitUntilFinished, self).start(ssh)
+        self.wait()
+
+class WaitForSeconds(Command):
+    def __init__(self, command, time):
+        super(WaitForSeconds, self).__init__(command)
+        self._time = time
+
+    def start(self, ssh):
+        super(WaitForSeconds, self).start(ssh)
+        time.sleep(self._time)
+
 """
 A nonblocking SSH tunnel which allows for executing arbitrary commands.
 It is possible to wait for the chain of commands to finish.  All the
@@ -97,22 +119,36 @@ class SSH:
     def __init__(self, vm):
         self._commands = []
         self._vm = vm
-
+        self._ip = None
 
     def vm(self):
         return self._vm
 
-    def __lshift__(self, command):
-        cmd = Command(self, command)
+    def ip(self):
+        if not self._ip:
+            q = self << WaitUntilFinished("curl ifconfig.me")
+            self._ip = q.read().strip()
+        return self._ip 
+
+    def last_command(self):
+        if not self._commands:
+            return self
+
+        return self._commands[-1]
+
+    def __lshift__(self, cmd):
+        if not isinstance(cmd, Command):
+            cmd = Command(cmd)
         self._commands.append(cmd)
+        cmd.start(self)
         return cmd
 
+    def read(self):
+        if self.last_command() != self:
+            return self.last_command().read()
+        return None
 
-q = SSH("omid@rumi") << "ping google.com -c4" << "echo whatever"
-q.wait()
-r = q.read()
-while (r not in [None, ""]):
-    print r
-    r = q.read()
-print r
-print "Done waiting"
+    def terminate(self):
+        map(lambda c: c.terminate(), self._commands)
+        return self
+
