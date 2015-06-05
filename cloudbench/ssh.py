@@ -15,10 +15,13 @@ class Command(object):
         self._cmd = command.split(" ")
 
     def start(self, ssh):
-        """
-        Start the command by executing it on the remote ssh server.
+        """Start the command by executing it on a remote ssh server.
+
         stdout and stderr are set to nonblocking so we can read off of
-        the server while performing other operations
+        the server while performing other operations.  This method
+        creates a thread that reads off data from the stdout and pushes
+        them to a queue.  The queue can be accessed by using the read()
+        method.
         """
         self._ssh = ssh
 
@@ -72,10 +75,13 @@ class Command(object):
         self._thread.start()
 
     def wait(self):
+        """ Wait until the command has finished executing or an error
+        occured in the thread."""
         self._thread.join()
         return self
 
     def terminate(self):
+        """ Terminate the command gracefully """
         # Check if the process has already terminated
         if self._process.poll() is not None:
             return self
@@ -85,17 +91,20 @@ class Command(object):
         return self
 
     def read(self):
+        """ Read the latest string pushed to the Queue """
         if not self._queue.empty():
             return self._queue.get(False)
-
         return None
 
     def __lshift__(self, cmd):
+        """ Pushes the next command to the SSH tunnel """
         return (self._ssh << cmd)
 
 
 class WaitUntilFinished(Command):
     def start(self, ssh):
+        """ Start executing the command, and wait until the command is
+        finished executing """
         super(WaitUntilFinished, self).start(ssh)
         self.wait()
 
@@ -105,6 +114,13 @@ class WaitForSeconds(Command):
         self._time = time
 
     def start(self, ssh):
+        """ Start the command and wait self._time seconds before
+        proceeding to run the rest of the program.
+
+        This is useful for programs that need coordination, or you just
+        want to make sure that a process has started executing on the
+        remote server before moving on.
+        """
         super(WaitForSeconds, self).start(ssh)
         time.sleep(self._time)
 
@@ -122,21 +138,35 @@ class SSH:
         self._ip = None
 
     def vm(self):
+        """
+        Returns the virtual machine, for now this is just th string that
+        SSH clients use to connect to the server, e.g., username@domain
+        """
         return self._vm
 
     def ip(self):
+        """
+        Returns the public IP of the SSH server by using the ifconfig.me
+        website.
+        """
         if not self._ip:
             q = self << WaitUntilFinished("curl ifconfig.me")
             self._ip = q.read().strip()
         return self._ip 
 
     def last_command(self):
+        """
+        Returns the last command that was executed on the remote server
+        """
         if not self._commands:
             return self
 
         return self._commands[-1]
 
     def __lshift__(self, cmd):
+        """
+        Operator for piping data to the remote server
+        """
         if not isinstance(cmd, Command):
             cmd = Command(cmd)
         self._commands.append(cmd)
@@ -144,11 +174,21 @@ class SSH:
         return cmd
 
     def read(self):
+        """Read off the queue of the LAST command
+
+        Since the commands are executed asynchronously there is no total
+        order when the outputs are written, so it doesn't make sense to
+        return anything but the last command.
+        """
         if self.last_command() != self:
             return self.last_command().read()
         return None
 
     def terminate(self):
+        """
+        Terminates all the commands that are being executed on the remote
+        server.  Useful for terminating a benchmark.
+        """
         map(lambda c: c.terminate(), self._commands)
         return self
 
