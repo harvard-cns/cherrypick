@@ -1,0 +1,11 @@
+<gcp>
+    <vm name='vm1' image='' type='' />
+</gcp>
+<azure>
+    <vm name='vm1' image='' type='' />
+</azure>
+<aws>
+    <vm name='vm1' image='' type='' />
+</aws>
+
+
