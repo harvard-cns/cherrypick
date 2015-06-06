@@ -1,11 +1,22 @@
-<gcp>
-    <vm name='vm1' image='' type='' />
-</gcp>
-<azure>
-    <vm name='vm1' image='' type='' />
-</azure>
-<aws>
-    <vm name='vm1' image='' type='' />
-</aws>
+<config>
+    <azure>
+        <!-- Used to put VMs together -->
+        <groups>
+            <group name='g1' location='West US' />
+            <group name='g2' location='West US' />
+        </groups>
 
+        <virtual-machines>
+            <virtual-machine name='vm1' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='Small' virtual-network='vnet1' group='g1' />
+            <virtual-machine name='vm2' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='Small' virtual-network='vnet2' group='g2' />
+        </virtual-machines>
 
+        <virtual-networks>
+            <virtual-network name='vnet1' address-range='10.0.2.15' location='West US' group='g1' />
+            <virtual-network name='vnet2' address-range='10.0.3.15' location='West US' group='g2' />
+        </virtual-networks>
+
+        <storages>
+        </storages>
+    </azure>
+</config>
