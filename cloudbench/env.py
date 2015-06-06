@@ -40,6 +40,9 @@ class Env(object):
     def virtual_networks(self):
         return self.config().virtual_networks().values()
 
+    def groups(self):
+        return self.config().groups().values()
+
     def vm(self, name):
         vms = self.config().virtual_machines()
         if name in vms:
@@ -52,12 +55,19 @@ class Env(object):
             return vns[name]
         return None
 
-    def groups(self):
-        return self.config().groups().values()
+    def group(self, name):
+        groups = self.config().groups()
+        if name in groups:
+            return groups[name]
+        return None
 
-    def prepare(self):
-        for vm in self.virtual_machines():
-            vm.create()
+    def setup(self):
+        for vm in self.virtual_machines(): vm.create()
+
+    def teardown(self):
+        for vm in self.virtual_machines(): vm.delete()
+        for vnet in self.virtual_networks(): vnet.delete()
+        for group in self.groups(): group.delete()
 
 class CloudObject(object):
     def __init__(self, name, config, env):
@@ -135,6 +145,10 @@ class VirtualMachine(CloudObject):
 
         return self._ready
 
+    def delete(self):
+        env.delete_vm(self)
+        self._ready = False
+
 
 class VirtualNetwork(CloudObject):
     def __init__(self, name, config, env):
@@ -161,7 +175,9 @@ class VirtualNetwork(CloudObject):
         return self._config['address-range']
 
     def location(self):
-        return self._config['location']
+        if 'location' in self._config:
+            return self._config['location']
+        return None
 
     def create(self):
         if self._ready: return True
@@ -174,12 +190,21 @@ class VirtualNetwork(CloudObject):
 
         return True
 
+    def delete(self):
+        env.delete_vnet(self)
+        self._ready = False
+
+
 class Group(CloudObject):
     def __init__(self, name, config, env):
         super(Group,self).__init__(name, config, env)
 
     def virtual_machines(self):
         ret = self._env.virtual_machines().values()
+        return filter(lambda vm: vm.group() == self, ret)
+
+    def virtual_networks(self):
+        ret = self._env.virtual_networks().values()
         return filter(lambda vm: vm.group() == self, ret)
 
     def create(self):
@@ -194,6 +219,10 @@ class Group(CloudObject):
         if 'location' in self._config:
             return self._config['location']
         return None
+
+    def delete(self):
+        env.delete_group(self)
+        self._ready = False
 
 class EnvConfig(object):
     def __init__(self, f, cloud, env):
@@ -273,13 +302,15 @@ class EnvXmlConfig(EnvConfig):
 
 import subprocess
 import uuid
+import base64
+
 class AzureManager(object):
     def __init__(self):
         self._uuid = 'deadbeef' #str(uuid.uuid4())
 
     def uuid(self, obj):
         if obj is None: return None
-        return self._uuid + '-' + str(obj)
+        return self._uuid + '' + str(obj)
 
     def execute(self, command):
         p = subprocess.Popen(command)
@@ -287,42 +318,71 @@ class AzureManager(object):
 
     def if_available(self, option, value):
         if value:
-            return [option, '"' + str(value) + '"']
+            return [option, str(value)]
         return []
 
     def create_vm(self, vm):
         cmd  = ['azure', 'vm', 'create', '-z', vm.type]
         cmd += self.if_available('-a', self.uuid(vm.group()))
         cmd += self.if_available('-w', self.uuid(vm.network()))
-        cmd += ['-e', '22', '"%s"' % self.uuid(vm.name), '"%s"' % vm.image, '"%s"' % 'omid', '"%s"' % 'q12345^Y']
+        cmd += ['-e', '22', self.uuid(vm.name), vm.image,  'omid', 'q12345^Y']
 
+        print "----------------------------------------"
         print "Creating vm: %s" % vm.name
         print "Executing %s" % " ".join(cmd)
 
         return self.execute(cmd)
 
+    def delete_vm(self, vm):
+        cmd = ['azure', 'vm', 'delete', self.uuid(vm.name)]
+        if not self.execute(cmd): return False
+        cmd = ['azure', 'service', 'delete', self.uuid(vm.name)]
+        if not self.execute(cmd): return False
+        cmd = ['azure', 'storage', 'delete', self.uuid(vm.name)]
+        if not self.execute(cmd): return False
+
+        return True
+
     def create_vnet(self, vnet):
         cmd  = ['azure', 'network', 'vnet', 'create']
         cmd += self.if_available('-e', vnet.address_range())
         cmd += self.if_available('-l', vnet.location())
-        cmd += self.if_available('-a', vnet.group())
-        cmd += ['"%s"' % self.uuid(vnet.name)]
+        cmd += self.if_available('-a', self.uuid(vnet.group()))
+        cmd += [self.uuid(vnet.name)]
 
+        print "----------------------------------------"
         print "Creating vnet: %s" % vnet.name
         print "Executing %s" % " ".join(cmd)
 
         return self.execute(cmd)
 
+    def delete_vnet(self, vnet):
+        for vm in vnet.virtual_machines(): self.delete_vm(vm)
+
+        cmd  = ['azure', 'network', 'vnet', 'delete',
+                self.uuid(vnet.name)]
+        return self.execute(cmd)
+
     def create_group(self, group):
         cmd  = ['azure', 'account', 'affinity-group', 'create']
         cmd += self.if_available('-l', group.location())
-        cmd += ['"%s"' % self.uuid(group.name)]
+        cmd += ['-e', base64.b64encode(self.uuid(group.name))]
+        cmd += [self.uuid(group.name)]
 
+        print "----------------------------------------"
         print "Creating group: %s" % group.name
         print "Executing %s" % " ".join(cmd)
 
         return self.execute(cmd)
 
+    def delete_group(self, group):
+        for vm in group.virtual_machines(): self.delete_vm(vm)
+        for vnet in group.virtual_networks(): self.delete_vnet(vnet)
+
+        cmd  = ['azure', 'account', 'affinity-group', 'delete',
+                self.uuid(group.name)]
+        return self.execute(cmd)
+
 env = Env('azure', "./benchmarks/fio/config.xml")
-env.prepare()
-env.prepare()
+env.setup()
+env.teardown()
