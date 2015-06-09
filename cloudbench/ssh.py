@@ -143,6 +143,7 @@ class WaitUp(Command):
         import time
         sys.stdout.write("Waiting for %s " % ssh.vm())
         while True:
+            sys.stdout.flush()
             super(WaitUp, self).start(ssh)
             self.wait()
             if self.process().poll() == 0:

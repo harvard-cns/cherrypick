@@ -4,9 +4,6 @@ from env.configs.xml_config import EnvXmlConfig
 from env.clouds.azure import AzureCloud
 
 class Env(object):
-    def config(self):
-        pass
-
     def __init__(self, cloud, f):
         self._cloud = cloud
         self._file  = f
@@ -45,6 +42,10 @@ class Env(object):
 
     def delete_group(self, group):
         return self.manager().delete_group(group)
+
+    def create_vm_endpoint(self, vm, endpoint):
+        self.manager().create_vm_endpoint(vm, endpoint)
+        return
 
     def create_vm(self, vm):
         return self.manager().create_vm(vm)
@@ -89,13 +90,3 @@ class Env(object):
         for vm in self.virtual_machines(): vm.delete()
         for vnet in self.virtual_networks(): vnet.delete()
         for group in self.groups(): group.delete()
-
-if __name__ == "__main__":
-    from test import run
-    import sys
-
-    env = Env('azure', "./benchmarks/fio/config.xml")
-    if '-c' in sys.argv: env.setup()
-    if '-e' in sys.argv: run(env)
-    if '-d' in sys.argv: env.teardown()
-
