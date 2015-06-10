@@ -5,6 +5,21 @@ cloud providers. It also tries to identify the bottleneck resources in
 the cloud platform for applications.
 
 
+# Setup
+Put your keys in the ./config/ folder.  For Azure you would need to
+create two keys:
+
+* cloud.pem
+* cloud.key
+
+cloud.key should be a 2048bit RSA key.  You can generate Azure keys with
+the openssl command or just the supplied makefile:
+
+> make azure_keys
+
+Also make sure that the permission of *cloud.key* is set to 600.
+
+
 ## Examples
 
 To run a specific benchmark you can use the 'bin/cb' binary.  For
