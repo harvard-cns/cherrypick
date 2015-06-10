@@ -1,7 +1,5 @@
-import ssh
-
-from env.configs.xml_config import EnvXmlConfig
-from env.clouds.azure import AzureCloud
+from cloudbench.env.config.xml_config import EnvXmlConfig
+from cloudbench.env.clouds import AzureCloud
 
 class Env(object):
     def __init__(self, cloud, f):

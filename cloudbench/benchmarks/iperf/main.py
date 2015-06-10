@@ -1,5 +1,4 @@
-from ssh import WaitUntilFinished, WaitForSeconds
-import sys, os
+from cloudbench.ssh import WaitUntilFinished, WaitForSeconds
 
 def run(env):
     vm1 = env.vm('vm1').ssh()

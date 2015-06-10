@@ -1,19 +1,20 @@
-import threading
-import Queue
-import subprocess
-import fcntl
-import os
-import select
-import sys
+import subprocess, threading, Queue, signal
+import sys, os, select, fcntl
 import time
 import shlex
-import signal
 
-import util
+import constants
 
-DEBUG=False
+DEBUG = False
 
 class Command(object):
+    """A Command object is a SSH process that is getting executed on the
+    remoted server.
+
+    For each command object, a separate thread reads the output of the
+    remote process periodically and adds it to a thread-safe queue that
+    can be accessed in other places
+    """
     def __init__(self, command):
         self._ssh = None
         self._cmd = command
@@ -34,16 +35,15 @@ class Command(object):
             fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
         def run_cmd(ssh, command):
-            if DEBUG:
-                print "Executing %s" % " ".join(["ssh", "-i",
-                    util.DEFAULT_VM_PRIVATE_KEY, "-q", "-o",
-                    "StrictHostKeyChecking=no", "-t", "-t", ssh.vm(),
-                    '--'] + command)
+            cmd = "ssh -i {} -q -o StrictHostKeyChecking=no "\
+                   "{} -- {}".format(constants.DEFAULT_VM_PRIVATE_KEY,
+                   ssh.vm(), command)
 
-            return subprocess.Popen(shlex.split(
-                    "ssh -i {} -q -o StrictHostKeyChecking=no "\
-                    "{} -- {}".format(util.DEFAULT_VM_PRIVATE_KEY,
-                    ssh.vm(), command)), stderr=subprocess.PIPE,
+            if DEBUG:
+                print "Executing %s" % cmd
+
+            return subprocess.Popen(shlex.split(cmd),
+                    stderr=subprocess.PIPE,
                     stdout=subprocess.PIPE)
 
         def monitor_process(p, queue):
@@ -78,7 +78,6 @@ class Command(object):
                 target=monitor_process,
                 args=(self._process, self._queue,))
         self._thread.daemon = True
-
         self._thread.start()
 
     def process(self):
@@ -108,7 +107,7 @@ class Command(object):
 
     def __lshift__(self, cmd):
         """ Pushes the next command to the SSH tunnel """
-        return (self._ssh << cmd)
+        return self._ssh << cmd
 
 
 class WaitUntilFinished(Command):
@@ -119,9 +118,9 @@ class WaitUntilFinished(Command):
         self.wait()
 
 class WaitForSeconds(Command):
-    def __init__(self, command, time):
+    def __init__(self, command, _time):
         super(WaitForSeconds, self).__init__(command)
-        self._time = time
+        self._time = _time
 
     def start(self, ssh):
         """ Start the command and wait self._time seconds before
@@ -136,11 +135,10 @@ class WaitForSeconds(Command):
 
 
 class WaitUp(Command):
-    def __init__(self, cmd=None):
-        super(WaitUp, self).__init__('exit')
+    def __init__(self, cmd='exit'):
+        super(WaitUp, self).__init__(cmd)
 
     def start(self, ssh):
-        import time
         sys.stdout.write("Waiting for %s " % ssh.vm())
         while True:
             sys.stdout.flush()
@@ -166,7 +164,8 @@ class SSH:
         self._vm = vm
         self._ip = None
 
-        if wait_up: WaitUp().start(self)
+        if wait_up:
+            WaitUp().start(self)
 
     def vm(self):
         """
@@ -181,9 +180,9 @@ class SSH:
         website.
         """
         if not self._ip:
-            q = self << WaitUntilFinished("curl ifconfig.me")
-            self._ip = q.read().strip()
-        return self._ip 
+            ip_cmd = self << WaitUntilFinished("curl ifconfig.me")
+            self._ip = ip_cmd.read().strip()
+        return self._ip
 
     def last_command(self):
         """

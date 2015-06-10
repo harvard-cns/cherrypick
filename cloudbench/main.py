@@ -1,10 +1,8 @@
-from environment import Env
+from cloudbench.env import Env
 import argparse, os
 
 #TODO: Clean up
 def main():
-    import sys
-
     parser = argparse.ArgumentParser(prog='Cloudbench')
 
     parser.add_argument('-s', '--setup', action='store_true',
@@ -33,8 +31,8 @@ def main():
         print "Couldn't find the benchmark."
         return
 
-    mod = __import__('benchmarks.' + args.benchmark + '.main',
-            fromlist=['benchmarks.' + args.benchmark])
+    mod = __import__('cloudbench.benchmarks.' + args.benchmark + '.main',
+            fromlist=['cloudbench.benchmarks.' + args.benchmark])
 
     env = Env('azure', "../cloudbench/benchmarks/" +
             args.benchmark + "/config.xml")
