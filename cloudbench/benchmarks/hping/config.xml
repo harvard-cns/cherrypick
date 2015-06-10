@@ -1,0 +1,19 @@
+<config>
+    <azure>
+        <groups>
+            <group name='g1' location='West US' />
+            <group name='g2' location='East US' />
+        </groups>
+
+        <virtual-machines>
+            <virtual-machine name='vm-west' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='Small' group='g1' />
+            <virtual-machine name='vm-east' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='Small'  group='g2' />
+        </virtual-machines>
+
+        <virtual-networks>
+        </virtual-networks>
+
+        <storages>
+        </storages>
+    </azure>
+</config>

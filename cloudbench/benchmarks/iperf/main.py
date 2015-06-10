@@ -5,9 +5,7 @@ def run(env):
     vm1 = env.vm('vm1').ssh()
     vm2 = env.vm('vm2').ssh()
 
-    vm1 << WaitUntilFinished("curl ifconfig.me")
-    vm1_ip = vm1.read().strip()
-
+    vm1_ip = vm1.ip()
     print vm1_ip
 
     print "Installing iperf."
