@@ -18,6 +18,7 @@ class CloudEntity(object):
         self._ready = False
 
     def __getattr__(self, name):
+        name = name.replace('_', '-')
         if name in self._config:
             return self._config[name]
 

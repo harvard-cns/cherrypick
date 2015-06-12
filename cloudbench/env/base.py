@@ -7,11 +7,11 @@ class Env(object):
         self._file  = f
         self._config = None
         self._manager = None
-        self._uuid = 'deadbeef' #str(uuid.uuid4())
+        self._uuid = 'cloudbench' #str(uuid.uuid4())
 
     def namify(self, obj):
         if obj is None: return None
-        return self._uuid + '' + str(obj)
+        return self._uuid + '' + str(obj).lower()
 
 
     def config(self):
@@ -42,8 +42,7 @@ class Env(object):
         return self.manager().delete_group(group)
 
     def create_vm_endpoint(self, vm, endpoint):
-        self.manager().create_vm_endpoint(vm, endpoint)
-        return
+        return self.manager().create_vm_endpoint(vm, endpoint)
 
     def create_vm(self, vm):
         return self.manager().create_vm(vm)

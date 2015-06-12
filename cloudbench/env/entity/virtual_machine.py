@@ -55,8 +55,8 @@ class VirtualMachine(CloudEntity):
         ep = name
         if isinstance(ep, str):
             ep = VirtualMachineEndpoint( name, {'name': name,
-                'protocol': protocol, 'public_port': pub_port,
-                'private_port': pri_port}, self._env)
+                'protocol': protocol, 'public-port': pub_port,
+                'private-port': pri_port}, self._env)
         self._endpoints.append(ep)
         return ep
 

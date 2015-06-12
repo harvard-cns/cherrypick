@@ -1,6 +1,8 @@
 import subprocess
 import base64
+
 from cloudbench import constants
+from cloudbench.util import Debug
 
 class AzureCloud(object):
     def __init__(self, env):
@@ -10,8 +12,19 @@ class AzureCloud(object):
         return self._env.namify(obj)
 
     def execute(self, command):
-        print "Running %s" % (' '.join(command))
-        p = subprocess.Popen(' '.join(command), shell=True)
+        Debug.cmd << (' '.join(command)) << "\n"
+
+        p = subprocess.Popen(' '.join(command), shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+        (outdata, errdata) = p.communicate()
+
+        if errdata: 
+            Debug.err << errdata << "\n"
+
+        if outdata:
+            Debug.info << outdata << "\n"
+
         return (p.wait() == 0)
 
     def if_available(self, option, value):
@@ -26,16 +39,18 @@ class AzureCloud(object):
         cmd += ['-e', '22', self.namify(vm.name), vm.image,  'cloudbench', '-P',
                 '-t', constants.DEFAULT_VM_PUBLIC_KEY]
 
-        print "----------------------------------------"
-        print "Creating vm: %s" % vm.name
-        print "Executing %s" % " ".join(cmd)
-
+        Debug.info << "Creating vm: %s\n" % vm.name
         ret = self.execute(cmd)
-        if not ret: return ret
+        if not ret:
+            return ret
 
         # Create the endpoints of the vm
         for ep in vm.endpoints():
-            self.create_vm_endpoint(vm, ep)
+            ret = self.create_vm_endpoint(vm, ep)
+            if not ret:
+                return False
+
+        return ret
 
     def create_vm_endpoint(self, vm, ep):
         cmd  = ['azure', 'vm', 'endpoint', 'create']
@@ -44,7 +59,7 @@ class AzureCloud(object):
         cmd += ['--endpoint-protocol', ep.protocol]
         ret = self.execute(cmd)
         if not ret:
-            print "Failed to create the endpoint: %s" % ep
+            Debug.err << "Failed to create the endpoint: %s" % ep
             return ret
 
     def address_vm(self, vm):
@@ -61,14 +76,11 @@ class AzureCloud(object):
         cmd += self.if_available('-a', self.namify(vnet.group()))
         cmd += [self.namify(vnet.name)]
 
-        print "----------------------------------------"
-        print "Creating vnet: %s" % vnet.name
-        print "Executing %s" % " ".join(cmd)
-
+        Debug.info << "Creating vnet: %s\n" % vnet.name
         return self.execute(cmd)
 
     def delete_vnet(self, vnet):
-        for vm in vnet.virtual_machines(): self.delete_vm(vm)
+        for vm in vnet.virtual_machines(): vm.delete()
 
         cmd  = ['azure', 'network', 'vnet', 'delete', '-q',
                 self.namify(vnet.name)]
@@ -80,17 +92,34 @@ class AzureCloud(object):
         cmd += ['-e', base64.b64encode(self.namify(group.name))]
         cmd += [self.namify(group.name)]
 
-        print "----------------------------------------"
-        print "Creating group: %s" % group.name
-        print "Executing %s" % " ".join(cmd)
+        Debug.info << "Creating group: " << group.name << "\n"
+        ret = self.execute(cmd)
+
+        if not ret:
+            Debug.err << "Failed to create the affinity group: " << \
+            self.namify(group.name) << "\n"
+
+        cmd  = ['azure', 'storage', 'account', 'create']
+        cmd += ['-a', self.namify(group.name)]
+        cmd += ['--type', group.storage_type]
+        cmd += [self.namify(group.name + "sa")]
 
         return self.execute(cmd)
 
     def delete_group(self, group):
-        for vm in group.virtual_machines(): self.delete_vm(vm)
-        for vnet in group.virtual_networks(): self.delete_vnet(vnet)
+        for vm in group.virtual_machines(): vm.delete()
+        for vnet in group.virtual_networks(): vnet.delete()
 
-        cmd  = ['azure', 'account', 'affinity-group', 'delete', '-q', 
-                self.namify(group.name)]
+        cmd  = ['azure', 'storage', 'account', 'delete']
+        cmd += ['-q', self.namify(group.name + 'sa')]
+
+        ret = self.execute(cmd)
+        if not ret:
+            Debug.err << "Couldn't delete the storage account of " << \
+            group.name << "\n"
+
+        cmd = ['azure', 'account', 'affinity-group', 'delete', '-q']
+        cmd += [self.namify(group.name)]
+
         return self.execute(cmd)
 

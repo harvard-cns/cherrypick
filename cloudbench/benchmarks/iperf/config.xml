@@ -2,8 +2,8 @@
     <azure>
         <!-- Used to put VMs together -->
         <groups>
-            <group name='g1' location='West US' />
-            <group name='g2' location='East US' />
+            <group name='g1' location='West US' storage-type='LRS' />
+            <group name='g2' location='East US' storage-type='LRS' />
         </groups>
 
         <virtual-machines>

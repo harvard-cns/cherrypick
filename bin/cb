@@ -6,3 +6,4 @@ sys.path.append("..")
 # Run cloud bench
 import cloudbench
 cloudbench.main()
+

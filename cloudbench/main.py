@@ -1,4 +1,5 @@
 from cloudbench.env import Env
+from cloudbench.util import Debug
 import argparse, os
 
 #TODO: Clean up
@@ -20,7 +21,11 @@ def main():
     parser.add_argument('-l', '--list', action='store_true',
             default=False, help='List all the benchmarks')
 
+    parser.add_argument('-v', '--verbosity', action='count', default=0)
+
     args = parser.parse_args()
+
+    Debug.verbosity(args.verbosity)
 
     if args.list:
         for d in next(os.walk('../cloudbench/benchmarks'))[1]:
