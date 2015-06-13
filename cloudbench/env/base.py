@@ -1,33 +1,54 @@
 from cloudbench.env.config.xml_config import EnvXmlConfig
 from cloudbench.env.clouds import AzureCloud
+from cloudbench.storage import AzureStorage, FileStorage
 
 class Env(object):
-    def __init__(self, cloud, f):
+    def __init__(self, cloud, f, benchmark, storage):
         self._cloud = cloud
-        self._file  = f
+        self._file = f
         self._config = None
         self._manager = None
-        self._uuid = 'cloudbench' #str(uuid.uuid4())
+        self._storage = storage
+        self._benchmark = benchmark
+        self._uuid = 'cb'
 
     def namify(self, obj):
-        if obj is None: return None
-        return self._uuid + '' + str(obj).lower()
+        if obj is None:
+            return None
+        return self._uuid + self.benchmark_name() + str(obj).lower()
 
 
     def config(self):
-        if self._config: return self._config
+        if self._config:
+            return self._config
         if '.xml' in self._file:
             self._config = EnvXmlConfig(self._file, self._cloud, self)
 
         return self._config
 
     def manager(self):
-        if self._manager: return self._manager
+        if self._manager:
+            return self._manager
 
         if self._cloud == 'azure':
             self._manager = AzureCloud(self)
 
         return self._manager
+
+    def storage(self):
+        if isinstance(self._storage, str):
+            if self._storage == 'azure':
+                self._storage = AzureStorage(self)
+            elif self._storage == 'file':
+                self._storage = FileStorage(self)
+
+        return self._storage
+
+    def benchmark_name(self):
+        return self._benchmark
+
+    def cloud_name(self):
+        return self._cloud
 
     def address_vm(self, vm):
         return self.manager().address_vm(vm)
@@ -81,9 +102,15 @@ class Env(object):
         return None
 
     def setup(self):
-        for vm in self.virtual_machines(): vm.create()
+        for vm in self.virtual_machines():
+            vm.create()
 
     def teardown(self):
-        for vm in self.virtual_machines(): vm.delete()
-        for vnet in self.virtual_networks(): vnet.delete()
-        for group in self.groups(): group.delete()
+        for vm in self.virtual_machines():
+            vm.delete()
+
+        for vnet in self.virtual_networks():
+            vnet.delete()
+
+        for group in self.groups():
+            group.delete()

@@ -15,12 +15,6 @@ class Logger(object):
         self.write(str(obj))
         return self
 
-    @classmethod
-    def get(cls):
-        if not cls._singleton:
-            cls._singleton = cls()
-        return cls._singleton
-
 
 class Debug(Logger):
     _singleton = None
@@ -32,10 +26,17 @@ class Debug(Logger):
     def write(self, string):
         if Debug._verbosity >= self._verbosity:
             sys.stderr.write(string)
+            sys.stderr.flush()
 
     @classmethod
     def verbosity(cls, level):
         cls._verbosity = level
+
+    @classmethod
+    def get(cls):
+        if not cls._singleton:
+            cls._singleton = cls(3)
+        return cls._singleton
 
 
 Debug.info = Debug(3)

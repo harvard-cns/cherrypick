@@ -1,11 +1,17 @@
-import subprocess, threading, Queue, signal
-import sys, os, select, fcntl
-import time
+import fcntl
+import os
+import Queue
+import select
 import shlex
+import signal
+import subprocess
+import sys
+import threading
+import time
 
 import constants
 
-DEBUG = False
+from util import Debug
 
 class Command(object):
     """A Command object is a SSH process that is getting executed on the
@@ -38,9 +44,7 @@ class Command(object):
             cmd = "ssh -i {} -q -o StrictHostKeyChecking=no "\
                    "{} -- {}".format(constants.DEFAULT_VM_PRIVATE_KEY,
                    ssh.vm(), command)
-
-            if DEBUG:
-                print "Executing %s" % cmd
+            Debug.cmd << cmd << "\n"
 
             return subprocess.Popen(shlex.split(cmd),
                     stderr=subprocess.PIPE,
@@ -139,16 +143,15 @@ class WaitUp(Command):
         super(WaitUp, self).__init__(cmd)
 
     def start(self, ssh):
-        sys.stdout.write("Waiting for %s " % ssh.vm())
+        Debug.info << "Waiting for %s " % ssh.vm()
         while True:
-            sys.stdout.flush()
             super(WaitUp, self).start(ssh)
             self.wait()
             if self.process().poll() == 0:
-                sys.stdout.write("\n")
-                print "%s is up." % ssh.vm()
+                Debug.info << ("\n")
+                Debug.info  << "%s is up.\n" % ssh.vm()
                 return
-            sys.stdout.write('.')
+            Debug.info << ('.')
             time.sleep(1)
 
 """
@@ -179,7 +182,7 @@ class SSH:
         Returns the public IP of the SSH server by using the ifconfig.me
         website.
         """
-        if not self._ip:
+        while not self._ip:
             ip_cmd = self << WaitUntilFinished("curl ifconfig.me")
             self._ip = ip_cmd.read().strip()
         return self._ip

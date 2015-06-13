@@ -1,6 +1,19 @@
 from cloudbench.ssh import WaitUntilFinished, WaitForSeconds
 from cloudbench.util import Debug
 
+def save(env, results):
+    res = results.strip().split(",")
+    out = {
+        'timestamp': res[0],
+        'server_ip': res[1],
+        'server_port': res[2],
+        'client_ip': res[3],
+        'client_port': res[4],
+        'bandwidth': res[8]
+    }
+
+    env.storage().save(out)
+
 def run(env):
     vm1 = env.vm('vm1').ssh()
     vm2 = env.vm('vm2').ssh()
@@ -17,6 +30,9 @@ def run(env):
     vm1 << WaitForSeconds('iperf -s -y C', 3)
     vm2 << WaitUntilFinished('iperf -y C -c ' + vm1_ip)
 
-    print vm2.read()
+    output = vm2.read()
+    Debug.cmd << output
+    save(env, output)
+
     vm1.terminate()
     vm2.terminate()
