@@ -13,6 +13,8 @@ import constants
 
 from util import Debug
 
+COUNT=0
+
 class Command(object):
     """A Command object is a SSH process that is getting executed on the
     remoted server.
@@ -41,18 +43,19 @@ class Command(object):
             fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
         def run_cmd(ssh, command):
+            global COUNT
             cmd = "ssh -i {} -q -o StrictHostKeyChecking=no "\
                    "{} -- {}".format(constants.DEFAULT_VM_PRIVATE_KEY,
                    ssh.vm(), command)
             Debug.cmd << cmd << "\n"
 
             return subprocess.Popen(shlex.split(cmd),
-                    stderr=subprocess.PIPE,
-                    stdout=subprocess.PIPE)
+                    stdout=subprocess.PIPE,
+                    stderr=None)
 
         def monitor_process(p, queue):
             nonblock(p.stdout)
-            nonblock(p.stderr)
+            #nonblock(p.stderr)
 
             while (True):
                 read, _, _ = select.select([p.stdout], [], [], 1)
@@ -69,7 +72,9 @@ class Command(object):
                 while (True):
                     try:
                         r = p.stdout.read(4096)
-                        if (r == ""): return True
+                        if (r == ""):
+                            p.stdout.close()
+                            return True
                         queue.put(r)
                     except Exception as e:
                         raise e
@@ -99,7 +104,7 @@ class Command(object):
         if self._process.poll() is not None:
             return self
 
-        self._process.send_signal(signal.SIGINT)
+        self._process.send_signal(signal.SIGTERM)
         self.wait()
         return self
 

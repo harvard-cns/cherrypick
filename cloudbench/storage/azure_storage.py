@@ -19,15 +19,18 @@ class AzureStorage(BaseStorage):
         self._ts.create_table(self.table_name())
 
     def table_name(self):
-        return 'cloudbench'
+        return self._env.benchmark_name()
 
-    def save(self, dic, key=None):
+    def save(self, dic, partition=None, key=''):
         dic['RowKey'] = self.timestamp()
 
+        if key:
+            dic['RowKey'] = self.timestamp() + '_' + key
+
         # Don't really need the partition key right now
-        if key is None:
+        if partition is None:
             dic['PartitionKey'] = self._env.benchmark_name()
         else:
-            dic['PartitionKey'] = key
+            dic['PartitionKey'] = partition
 
         self._ts.insert_entity(self.table_name(), dic)

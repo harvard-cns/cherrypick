@@ -62,6 +62,14 @@ class AzureCloud(object):
             Debug.err << "Failed to create the endpoint: %s" % ep
             return ret
 
+    def start_vm(self, vm):
+        cmd = ['azure', 'vm', 'start', self.namify(vm.name)]
+        return self.execute(cmd)
+
+    def stop_vm(self, vm):
+        cmd = ['azure', 'vm', 'shutdown', self.namify(vm.name)]
+        return self.execute(cmd)
+
     def address_vm(self, vm):
         return self._env.namify(vm.name) + ".cloudapp.net"
 
@@ -86,6 +94,10 @@ class AzureCloud(object):
                 self.namify(vnet.name)]
         return self.execute(cmd)
 
+    def hashify_22(self, name):
+        import hashlib
+        return str(hashlib.md5(name).hexdigest())[0:22]
+
     def create_group(self, group):
         cmd  = ['azure', 'account', 'affinity-group', 'create']
         cmd += self.if_available('-l', group.location())
@@ -99,10 +111,11 @@ class AzureCloud(object):
             Debug.err << "Failed to create the affinity group: " << \
             self.namify(group.name) << "\n"
 
+
         cmd  = ['azure', 'storage', 'account', 'create']
         cmd += ['-a', self.namify(group.name)]
         cmd += ['--type', group.storage_type]
-        cmd += [self.namify(group.name + "sa")]
+        cmd += [self.hashify_22(self.namify(group.name))]
 
         return self.execute(cmd)
 
@@ -111,7 +124,7 @@ class AzureCloud(object):
         for vnet in group.virtual_networks(): vnet.delete()
 
         cmd  = ['azure', 'storage', 'account', 'delete']
-        cmd += ['-q', self.namify(group.name + 'sa')]
+        cmd += ['-q', self.hashify_22(self.namify(group.name))]
 
         ret = self.execute(cmd)
         if not ret:

@@ -1,0 +1,124 @@
+<config>
+    <azure>
+        <!-- Used to put VMs together -->
+        <groups>
+            <group storage-type='LRS' name='gwestus' location='West US' />
+            <group storage-type='LRS' name='gcentralus' location='Central US' />
+            <group storage-type='LRS' name='gsouthcentralus' location='South Central US'  />
+            <group storage-type='LRS' name='geastus' location='East US' />
+            <group storage-type='LRS' name='gnorthcentralus' location='North Central US' />
+            <group storage-type='LRS' name='geastus2' location='East US 2' />
+            <group storage-type='LRS' name='gnortheurope' location='North Europe' />
+            <group storage-type='LRS' name='gwesteurope' location='West Europe' />
+            <group storage-type='LRS' name='gsoutheastasia' location='Southeast Asia' />
+            <group storage-type='LRS' name='geastasia' location='East Asia' />
+            <group storage-type='LRS' name='gjapanwest' location='Japan West'  />
+            <group storage-type='LRS' name='gjapaneast' location='Japan East' />
+            <group storage-type='LRS' name='gbrazilsouth' location='Brazil South' />
+            <group storage-type='LRS' name='gaustraliasoutheast' location='Australia Southeast' />
+            <group storage-type='LRS' name='gaustraliaeast' location='Australia East' />
+        </groups>
+
+        <virtual-machines>
+            <!-- Group 1 -->
+            <virtual-machine name='vmwestus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gwestus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gcentralus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmsouthcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gsouthcentralus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmeastus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmnorthcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gnorthcentralus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmeastus2' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastus2'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmnortheurope' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gnortheurope'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmwesteurope' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gwesteurope'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmsoutheastasia' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gsoutheastasia'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmeastasia' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastasia'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmjapanwest' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gjapanwest'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmjapaneast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gjapaneast'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmbrazilsouth' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gbrazilsouth'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmaustraliasoutheast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gaustraliasoutheast'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vmaustraliaeast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gaustraliaeast'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+
+            <!-- Group 2 -->
+            <virtual-machine name='vm2westus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gwestus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2centralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gcentralus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2southcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gsouthcentralus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2eastus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2northcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gnorthcentralus'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2eastus2' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastus2'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2northeurope' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gnortheurope'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2westeurope' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gwesteurope'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2southeastasia' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gsoutheastasia'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2eastasia' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastasia'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2japanwest' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gjapanwest'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2japaneast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gjapaneast'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2brazilsouth' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gbrazilsouth'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2australiasoutheast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gaustraliasoutheast'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+            <virtual-machine name='vm2australiaeast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gaustraliaeast'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+        </virtual-machines>
+
+        <virtual-networks>
+        </virtual-networks>
+
+        <storages>
+        </storages>
+    </azure>
+</config>

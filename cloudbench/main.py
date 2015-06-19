@@ -7,6 +7,12 @@ BENCHMARK_PATH='../cloudbench/benchmarks/'
 def main():
     parser = argparse.ArgumentParser(prog='Cloudbench')
 
+    parser.add_argument('--start', action='store_true',
+        default=False, help='Start the VMs')
+
+    parser.add_argument('--stop', action='store_true',
+        default=False, help='Stop the VMs')
+
     parser.add_argument('-s', '--setup', action='store_true',
         default=False, help='Prepares the benchmark environment')
 
@@ -50,8 +56,14 @@ def main():
     if args.setup:
         env.setup()
 
+    if args.start:
+        env.start()
+
     if not args.no_execute:
         mod.run(env)
+
+    if args.stop:
+        env.stop()
 
     if args.teardown:
         env.teardown()

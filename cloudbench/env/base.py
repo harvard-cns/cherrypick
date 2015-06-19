@@ -2,6 +2,9 @@ from cloudbench.env.config.xml_config import EnvXmlConfig
 from cloudbench.env.clouds import AzureCloud
 from cloudbench.storage import AzureStorage, FileStorage
 
+import threading
+import time
+
 class Env(object):
     def __init__(self, cloud, f, benchmark, storage):
         self._cloud = cloud
@@ -53,6 +56,12 @@ class Env(object):
     def address_vm(self, vm):
         return self.manager().address_vm(vm)
 
+    def stop_vm(self, vm):
+        return self.manager().stop_vm(vm)
+
+    def start_vm(self, vm):
+        return self.manager().start_vm(vm)
+
     def delete_vm(self, vm):
         return self.manager().delete_vm(vm)
 
@@ -101,16 +110,38 @@ class Env(object):
             return groups[name]
         return None
 
+
+    def parallel(self, action, lst):
+        threads = []
+        for item in lst:
+            th = threading.Thread(target=action, args=(item,))
+            threads.append(th)
+            th.start()
+
+        for th in threads:
+            th.join()
+
     def setup(self):
-        for vm in self.virtual_machines():
-            vm.create()
+        def create_vms(group):
+            for vm in group.virtual_machines():
+                vm.create()
+        self.parallel(create_vms, self.groups())
 
     def teardown(self):
-        for vm in self.virtual_machines():
-            vm.delete()
+        def delete_vms(group):
+            for vm in group.virtual_machines():
+                vm.delete()
 
-        for vnet in self.virtual_networks():
-            vnet.delete()
+        self.parallel(delete_vms, self.groups())
+        self.parallel(lambda vn: vn.delete(), self.virtual_networks())
+        self.parallel(lambda gr: gr.delete(), self.groups())
 
-        for group in self.groups():
-            group.delete()
+    def start(self):
+        # for vm in self.virtual_machines():
+        #     vm.start()
+        self.parallel(lambda vm: vm.start(True), self.virtual_machines())
+
+    def stop(self):
+        # for vm in self.virtual_machines():
+        #     vm.stop()
+        self.parallel(lambda vm: vm.stop(True), self.virtual_machines())

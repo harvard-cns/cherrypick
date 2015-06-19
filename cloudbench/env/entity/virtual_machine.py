@@ -3,6 +3,8 @@ from cloudbench.ssh import SSH
 
 from cloudbench import constants
 
+import time, random
+
 class VirtualMachineEndpoint(CloudEntity):
     def __init__(self, name, config, env):
         super(VirtualMachineEndpoint,self).__init__(name, config, env)
@@ -87,6 +89,17 @@ class VirtualMachine(CloudEntity):
             self._deleted = True
             self._ready = False
 
+    def start(self, retry=False):
+        ret = self._env.start_vm(self)
+        while (ret == False) and retry:
+            time.sleep(random.uniform(5, 50)+60)
+            ret = self._env.start_vm(self)
+
+    def stop(self, retry=False):
+        ret = self._env.stop_vm(self)
+        while (ret == False) and retry:
+            time.sleep(random.uniform(5, 50)+60)
+            ret = self._env.stop_vm(self)
 
     def username(self):
         if 'username' not in self._config:
@@ -94,13 +107,18 @@ class VirtualMachine(CloudEntity):
 
         return self._config['username']
 
+    def url(self):
+        return self._env.address_vm(self)
 
-    def ssh(self):
+    def ssh(self, new=False):
+        # If we require new ssh session
+        if new:
+            return SSH("".join([self.username(), '@', self.url()]))
+
         if self._ssh:
             return self._ssh
 
-        self._ssh = SSH("".join([self.username(), '@',
-            self._env.address_vm(self)]))
+        self._ssh = SSH("".join([self.username(), '@', self.url()]))
 
         return self._ssh
 
