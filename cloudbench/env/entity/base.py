@@ -1,3 +1,5 @@
+from cloudbench.util import entity_repr
+
 class CloudEntity(object):
     def __init__(self, name, config, env):
         self._env    = env
@@ -14,8 +16,14 @@ class CloudEntity(object):
             return True
         return self.create()
 
+    def extend(self, attrs):
+        self._config.update(attrs)
+
     def delete(self):
         self._ready = False
+
+    def config(self):
+        return self._config
 
     def __getattr__(self, name):
         name = name.replace('_', '-')
@@ -26,4 +34,7 @@ class CloudEntity(object):
 
     def __str__(self):
         return self.name
+
+    def __repr__(self):
+        return entity_repr(self, self.__class__.__name__)
 

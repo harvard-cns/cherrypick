@@ -2,39 +2,29 @@ from cloudbench.env.entity import CloudEntity
 
 class VirtualNetwork(CloudEntity):
     def __init__(self, name, config, env):
-        super(VirtualNetwork,self).__init__(name, config, env)
+        super(VirtualNetwork, self).__init__(name, config, env)
         self._deleted = False
 
     def virtual_machines(self):
-        ret = self._env.virtual_machines()
-        return filter(lambda vm: vm.network() == self, ret)
-
-    def group(self):
-        groups = self._env.groups()
-
-        config= self._config
-        if ('group' not in config):
-            return None
-
-        group = config['group']
-
-        res = filter(lambda g: g.name == group, groups)
-        if res: return res[0]
-        return None
+        """ Returns the list of virtual machines attached to this
+        network """
+        vms = self._env.virtual_machines()
+        return [vm for vm in vms if vm.network() == self]
 
     def address_range(self):
+        """ Returns the address range for this virtual network """
         return self._config['address-range']
 
     def location(self):
+        """ Returns the location of this virtual network """
         if 'location' in self._config:
             return self._config['location']
         return None
 
     def create(self):
-        if self._ready: return True
-
-        if self.group() and (not self.group().ready_or_create()):
-            return False
+        """ Create this virtual network """
+        if self._ready:
+            return True
 
         if self._env.create_vnet(self):
             self._ready = True

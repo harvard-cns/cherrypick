@@ -1,6 +1,3 @@
-from .base import CloudEntity
-from .group import Group
-from .virtual_machine import VirtualMachine
-from .virtual_network import VirtualNetwork
+from .model import *
 
-__all__=['CloudEntity', 'Group', 'VirtualMachine', 'VirtualNetwork']
+__all__ = Entity.entities()

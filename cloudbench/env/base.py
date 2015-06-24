@@ -1,6 +1,7 @@
 from cloudbench.env.config.xml_config import EnvXmlConfig
 from cloudbench.env.clouds import AzureCloud
 from cloudbench.storage import AzureStorage, FileStorage
+from cloudbench.util import parallel
 
 import threading
 import time
@@ -16,20 +17,25 @@ class Env(object):
         self._uuid = 'cb'
 
     def namify(self, obj):
+        """ Normalize the name of objects based on the benchmark and the
+        actual object name """
         if obj is None:
             return None
         return self._uuid + self.benchmark_name() + str(obj).lower()
 
 
     def config(self):
+        """ Return the configuration """
         if self._config:
             return self._config
         if '.xml' in self._file:
             self._config = EnvXmlConfig(self._file, self._cloud, self)
+            self._config.parse()
 
         return self._config
 
     def manager(self):
+        """ Return the manager """
         if self._manager:
             return self._manager
 
@@ -39,6 +45,7 @@ class Env(object):
         return self._manager
 
     def storage(self):
+        """ Return the storage where we save the resulting data """
         if isinstance(self._storage, str):
             if self._storage == 'azure':
                 self._storage = AzureStorage(self)
@@ -48,100 +55,72 @@ class Env(object):
         return self._storage
 
     def benchmark_name(self):
+        """ Returns the name of the active benchmark """
         return self._benchmark
 
     def cloud_name(self):
+        """ Returns the name of the cloud provider """
         return self._cloud
 
-    def address_vm(self, vm):
-        return self.manager().address_vm(vm)
+    # Delegate these calls to the manager, maybe he knows what to do
+    # with them?
+    def __getattr__(self, name):
+        """ Delegates methods that are not defined to the manager """
 
-    def stop_vm(self, vm):
-        return self.manager().stop_vm(vm)
+        if name.startswith('create') or name.startswith('delete'):
+            if hasattr(self.manager(), name):
+                return getattr(self.manager(), name)
 
-    def start_vm(self, vm):
-        return self.manager().start_vm(vm)
+            raise AttributeError("'%s' object has no attribute '%s'" %
+                                 (self.__class__.__name__, name))
 
-    def delete_vm(self, vm):
-        return self.manager().delete_vm(vm)
+        return getattr(self.config(), name)
 
-    def delete_vnet(self, vnet):
-        return self.manager().delete_vnet(vnet)
+    # def address_vm(self, vm):
+    #     return self.manager().address_vm(vm)
 
-    def delete_group(self, group):
-        return self.manager().delete_group(group)
+    # def stop_vm(self, vm):
+    #     return self.manager().stop_vm(vm)
 
-    def create_vm_endpoint(self, vm, endpoint):
-        return self.manager().create_vm_endpoint(vm, endpoint)
+    # def start_vm(self, vm):
+    #     return self.manager().start_vm(vm)
 
-    def create_vm(self, vm):
-        return self.manager().create_vm(vm)
+    # def delete_vm(self, vm):
+    #     return self.manager().delete_vm(vm)
 
-    def create_vnet(self, vnet):
-        return self.manager().create_vnet(vnet)
+    # def delete_vnet(self, vnet):
+    #     return self.manager().delete_vnet(vnet)
 
-    def create_group(self, group):
-        return self.manager().create_group(group)
+    # def delete_group(self, group):
+    #     return self.manager().delete_group(group)
 
-    def virtual_machines(self):
-        return self.config().virtual_machines().values()
+    # def create_vm_endpoint(self, vm, endpoint):
+    #     return self.manager().create_vm_endpoint(vm, endpoint)
 
-    def virtual_networks(self):
-        return self.config().virtual_networks().values()
+    # def create_vm(self, vm):
+    #     return self.manager().create_vm(vm)
 
-    def groups(self):
-        return self.config().groups().values()
+    # def create_vnet(self, vnet):
+    #     return self.manager().create_vnet(vnet)
 
-    def vm(self, name):
-        vms = self.config().virtual_machines()
-        if name in vms:
-            return vms[name]
-        return None
-
-    def network(self, name):
-        vns = self.config().virtual_networks()
-        if name in vns:
-            return vns[name]
-        return None
-
-    def group(self, name):
-        groups = self.config().groups()
-        if name in groups:
-            return groups[name]
-        return None
-
-
-    def parallel(self, action, lst):
-        threads = []
-        for item in lst:
-            th = threading.Thread(target=action, args=(item,))
-            threads.append(th)
-            th.start()
-
-        for th in threads:
-            th.join()
+    # def create_group(self, group):
+    #     return self.manager().create_group(group)
 
     def setup(self):
-        def create_vms(group):
-            for vm in group.virtual_machines():
-                vm.create()
-        self.parallel(create_vms, self.groups())
+        """ Setup the VMs """
+        def create_vms(vm):
+            vm.create()
+        parallel(create_vms, self.virtual_machines().values())
+        parallel(create_vms, self.security_groups().values())
 
     def teardown(self):
-        def delete_vms(group):
-            for vm in group.virtual_machines():
-                vm.delete()
-
-        self.parallel(delete_vms, self.groups())
-        self.parallel(lambda vn: vn.delete(), self.virtual_networks())
-        self.parallel(lambda gr: gr.delete(), self.groups())
+        """ Tear down the VMs """
+        parallel(lambda gr: gr.delete(), self.locations().values())
 
     def start(self):
-        # for vm in self.virtual_machines():
-        #     vm.start()
-        self.parallel(lambda vm: vm.start(True), self.virtual_machines())
+        """ Start the VMs in parallel """
+        parallel(lambda vm: vm.start(True), self.virtual_machines())
 
     def stop(self):
-        # for vm in self.virtual_machines():
-        #     vm.stop()
-        self.parallel(lambda vm: vm.stop(True), self.virtual_machines())
+        """ Stop the VMs in parallel """
+        parallel(lambda vm: vm.stop(True), self.virtual_machines())
