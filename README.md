@@ -19,6 +19,13 @@ the openssl command or just the supplied makefile:
 
 Also make sure that the permission of *cloud.key* is set to 600.
 
+# Cloud specific notes
+
+## Azure
+* Because of plethora of random objects that Azure creates for you, as of
+now, it is not possible to "cleanly" delete a topology.  This is a work
+in progress and any feedbacks are welcome
+
 
 ## Examples
 
