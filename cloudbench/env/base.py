@@ -64,6 +64,10 @@ class Env(object):
         """ Returns the name of the cloud provider """
         return self._cloud
 
+    def vm(self, name):
+        """ Shorthand to find a virtual-machine """
+        return self.virtual_machines()[name]
+
     # Delegate these calls to the manager, maybe he knows what to do
     # with them?
     def __getattr__(self, name):
@@ -110,14 +114,75 @@ class Env(object):
 
     def setup(self):
         """ Setup the VMs """
-        def create_vms(vm):
-            vm.create()
-        parallel(create_vms, self.virtual_machines().values())
-        parallel(create_vms, self.security_groups().values())
+        def satisfied(ent):
+            """ Returns true if the requirement of an entity are
+            satisfied """
+            for dep in ent.dependencies:
+                deps = getattr(ent, dep)()
+                if not deps:
+                    continue
+                
+                if not isinstance(deps, list):
+                    deps = [deps]
+
+                # if any of the dependencies are not satisfied, return
+                # False
+                if any(map(lambda x: not x.created(), deps)):
+                    return False
+
+            return True
+
+        # Collect everything
+        everything = set()
+        for ent in self.entities().values():
+            everything = everything.union(set(ent.values()))
+
+        while everything:
+            to_remove = set()
+            to_create = set()
+            for ent in everything:
+                if satisfied(ent) and not ent.created():
+                    to_create.add(ent)
+
+            parallel(lambda x: x.create(), to_create)
+            to_remove = set(filter(lambda x: x.created(), to_create))
+            everything = everything - to_remove
 
     def teardown(self):
-        """ Tear down the VMs """
-        parallel(lambda gr: gr.delete(), self.locations().values())
+        """ Delete everything """
+        def satisfied(ent):
+            """ Returns true if the requirement of an entity are
+            satisfied """
+            for dep in ent.dependents:
+                deps = getattr(ent, dep)()
+                if not deps:
+                    continue
+                
+                if not isinstance(deps, list):
+                    deps = [deps]
+
+                # if any of the dependencies are not satisfied, return
+                # False
+                if any(map(lambda x: not x.deleted(), deps)):
+                    return False
+
+            return True
+
+        # Collect everything
+        everything = set()
+        for ent in self.entities().values():
+            everything = everything.union(set(ent.values()))
+
+        while everything:
+            to_remove = set()
+            to_delete = set()
+            for ent in everything:
+                if satisfied(ent) and not ent.deleted():
+                    to_delete.add(ent)
+
+            parallel(lambda x: x.delete(), to_delete)
+            to_remove = set(filter(lambda x: x.deleted(), to_delete))
+            everything = everything - to_remove
 
     def start(self):
         """ Start the VMs in parallel """

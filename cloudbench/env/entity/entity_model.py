@@ -33,6 +33,8 @@ class Entity(type):
 
         variables = {}
         attrs = dict(attributes)
+        attributes['dependencies'] = set()
+        attributes['dependents'] = set()
 
         # Augment the class with new properties
         for key, val in attrs.iteritems():

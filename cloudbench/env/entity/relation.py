@@ -36,6 +36,11 @@ class Relation(object):
 
     def augment_has_many_get(self, attributes, name):
         _get_method = inflection.pluralize(name)
+
+        if 'dependents' not in attributes:
+            attributes['dependents'] = set()
+        attributes['dependents'].add(_get_method)
+
         def get(this):
             #TODO: easier way to guess the method that we should call
             # here? e.g., virtual_machine vs. virtual_machines
@@ -57,6 +62,11 @@ class Relation(object):
     def augment_has_one_get(self, attributes, name):
         _get_method = inflection.singularize(name)
         _get_config_method = inflection.pluralize(name)
+
+        if 'dependents' not in attributes:
+            attributes['dependents'] = set()
+        attributes['dependents'].add(_get_method)
+
         def get(this):
             name  = inflection.dasherize(inflection.underscore(this.__class__.__name__))
             names = inflection.pluralize(name)
@@ -75,6 +85,11 @@ class Relation(object):
         _get_method = inflection.singularize(name)
         _key = inflection.dasherize(_get_method)
         _get_config_method = inflection.pluralize(name)
+
+        if 'dependencies' not in attributes:
+            attributes['dependencies'] = set()
+        attributes['dependencies'].add(_get_method)
+
         def get(this):
             name = inflection.dasherize(inflection.underscore(this.__class__.__name__))
             if _key not in this.config:
@@ -90,6 +105,11 @@ class Relation(object):
         _get_method = inflection.pluralize(name)
         _key = inflection.dasherize(_get_method)
         _get_config_method = inflection.pluralize(name)
+
+        if 'dependencies' not in attributes:
+            attributes['dependencies'] = set()
+        attributes['dependencies'].add(_get_method)
+
         def get(this):
             name = inflection.dasherize(inflection.underscore(this.__class__.__name__))
             if _key not in this.config:

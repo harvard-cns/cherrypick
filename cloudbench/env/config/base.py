@@ -96,3 +96,5 @@ class EnvConfig(object):
 
         return value
 
+    def entities(self):
+        return self._entities
