@@ -31,4 +31,11 @@
             <add-values name='sec-west' protocol='tcp' />
         </security-groups>
     </azure>
+
+    <aws>
+        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='size'   value='Small' />
+        <config name='west'   value='West US' />
+        <config name='east'   value='East US' />
+    </aws>
 </config>

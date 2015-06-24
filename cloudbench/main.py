@@ -13,6 +13,9 @@ def main():
     parser.add_argument('--stop', action='store_true',
         default=False, help='Stop the VMs')
 
+    parser.add_argument('--cloud', default="azure",
+        help='Cloud provider')
+
     parser.add_argument('-s', '--setup', action='store_true',
         default=False, help='Prepares the benchmark environment')
 
@@ -48,7 +51,7 @@ def main():
 
     mod = __import__('cloudbench.benchmarks.' + args.benchmark + '.main',
                      fromlist=['cloudbench.benchmarks.' + args.benchmark])
-    env = Env('azure',
+    env = Env(args.cloud,
               BENCHMARK_PATH + args.benchmark + "/config.xml",
               args.benchmark,
               args.storage)

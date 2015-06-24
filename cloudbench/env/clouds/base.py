@@ -10,6 +10,8 @@ class Cloud(object):
 
     def execute(self, command):
         Debug.cmd << (' '.join(filter(None, command))) << "\n"
+        return True
+
         p = subprocess.Popen(' '.join(command), shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)

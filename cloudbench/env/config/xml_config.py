@@ -33,6 +33,9 @@ class EnvXmlConfig(EnvConfig):
         root = self._tree
         config = root.find(self._cloud)
 
+        if config is None:
+            return
+
         for conf in config.findall('config'):
             # Save the cloud specific configurations
             self.config(conf.attrib['name'], conf.attrib['value'])

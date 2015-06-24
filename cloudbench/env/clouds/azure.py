@@ -7,12 +7,12 @@ from cloudbench.util import Debug
 from .base import Cloud
 
 class AzureCloud(Cloud):
-    def start_vm(self, vm):
-        cmd = ['azure', 'vm', 'start', self.namify(vm.name)]
+    def start_virtual_machine(self, vm):
+        cmd = ['azure', 'vm', 'start', self.unique(vm.name)]
         return self.execute(cmd)
 
-    def stop_vm(self, vm):
-        cmd = ['azure', 'vm', 'shutdown', self.namify(vm.name)]
+    def stop_virtual_machine(self, vm):
+        cmd = ['azure', 'vm', 'shutdown', self.unique(vm.name)]
         return self.execute(cmd)
 
     def address_vm(self, vm):
@@ -28,7 +28,7 @@ class AzureCloud(Cloud):
         # cmd += ['--type', group.storage_type]
         # cmd += [self.hashify_22(self.namify(group.name))]
 
-        return self.execute(cmd)
+        # return self.execute(cmd)
         cmd  = ['azure', 'account', 'affinity-group', 'create']
         cmd += self.if_available('-l', group.location)
         cmd += ['-e', base64.b64encode(self.unique(group.name))]

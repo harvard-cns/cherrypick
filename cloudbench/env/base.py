@@ -1,5 +1,5 @@
 from cloudbench.env.config.xml_config import EnvXmlConfig
-from cloudbench.env.clouds import AzureCloud
+from cloudbench.env.clouds import AzureCloud, AwsCloud
 from cloudbench.storage import AzureStorage, FileStorage
 from cloudbench.util import parallel
 
@@ -41,6 +41,8 @@ class Env(object):
 
         if self._cloud == 'azure':
             self._manager = AzureCloud(self)
+        elif self._cloud == 'aws':
+            self._manager = AwsCloud(self)
 
         return self._manager
 
