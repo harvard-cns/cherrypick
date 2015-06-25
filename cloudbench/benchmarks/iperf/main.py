@@ -4,35 +4,54 @@ from cloudbench.util import Debug
 
 TIMEOUT=300
 
-def save(env, results):
-    res = results.strip().split(",")
-    out = {
-        'timestamp': res[0],
-        'server_ip': res[1],
-        'server_port': res[2],
-        'client_ip': res[3],
-        'client_port': res[4],
-        'bandwidth': res[8]
-    }
+def iperf(vm1, vm2, env):
+    vm1_ssh = vm1.ssh(new=True)
+    vm2_ssh = vm2.ssh(new=True)
+    vm2_ssh_warmup = vm2.ssh(new=True)
 
-    env.storage().save(out)
+    while True:
+        Debug << "Running iperf client and server.\n"
+        vm1_ssh << WaitUntilFinished("sudo killall -9 iperf")
+        vm1_ssh << WaitForSeconds('iperf -s -y C', 3)
+
+        Debug << "Warming up ..."
+        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url)
+        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url)
+        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url)
+        vm2_ssh_warmup.terminate()
+
+        Debug << "Measuring iperf"
+        vm2_ssh << WaitUntilFinished('iperf -y C -c ' + vm1.url)
+        output = vm2_ssh.read()
+
+        if not output:
+            continue
+
+        vm1_ssh.terminate()
+        vm2_ssh.terminate()
+
+        res = output.strip().split(",")
+        out = {
+            'server_location': vm1.location().location,
+            'server_ip': res[1],
+            'server_port': res[2],
+            'client_location': vm2.location().location,
+            'client_ip': res[3],
+            'client_port': res[4],
+            'bandwidth': res[8]
+        }
+
+        return out
 
 def run(env):
-    vm1 = env.vm('vm-east').ssh()
-    vm2 = env.vm('vm-west').ssh()
+    vm1 = env.vm('vm-east')
+    vm2 = env.vm('vm-west')
 
     Debug << "Installing iperf.\n"
-    vm1 << WaitUntilFinished('sudo apt-get install iperf -y')
-    vm2 << WaitUntilFinished('sudo apt-get install iperf -y')
+    vm1.ssh() << WaitUntilFinished('sudo apt-get install iperf -y')
+    vm2.ssh() << WaitUntilFinished('sudo apt-get install iperf -y')
 
-    Debug << "Running iperf client and server.\n"
-    vm1 << WaitUntilFinished("killall -9 iperf")
-    vm1 << WaitForSeconds('iperf -s -y C', 3)
-    vm2 << WaitUntilFinished('iperf -y C -c ' + vm1.vm().url)
-
-    output = vm2.read()
-    Debug.cmd << output
-    #save(env, output)
+    print iperf(vm1, vm2, env)
 
     vm1.terminate()
     vm2.terminate()

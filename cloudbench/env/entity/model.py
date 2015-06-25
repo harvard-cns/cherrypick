@@ -71,14 +71,15 @@ class VirtualMachine(EntityModel):
 
 class VirtualNetwork(EntityModel):
     virtual_machines = has_many('VirtualMachine')
+    location         = depends_on_one('Location')
 
 class Location(EntityModel):
     virtual_machines = has_many('VirtualMachine')
     log_storages     = has_many('LogStorages')
+    virtual_networks = has_many('VirtualNetwork')
 
 class SecurityGroup(EntityModel):
     virtual_machines = depends_on_many('VirtualMachine')
-    location         = depends_on_one('Location')
 
 class LogStorage(EntityModel):
     virtual_machines = has_many('VirtualMachine')
