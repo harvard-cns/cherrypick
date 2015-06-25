@@ -10,7 +10,8 @@ class Cloud(object):
 
     def execute(self, command):
         Debug.cmd << (' '.join(filter(None, command))) << "\n"
-        return True
+        if self.env.is_test():
+            return True
 
         p = subprocess.Popen(' '.join(command), shell=True,
                 stdout=subprocess.PIPE,
@@ -34,7 +35,7 @@ class Cloud(object):
         if name is None:
             return None
 
-        return self.env.benchmark_name() + str(name)
+        return 'cb' + self.env.benchmark_name() + str(name)
 
 
     def if_available(self, option, value):

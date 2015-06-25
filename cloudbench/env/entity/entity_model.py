@@ -31,10 +31,25 @@ class Entity(type):
         if '__init__' in attributes:
             __init__ = attributes['__init__']
 
+        def if_undefined(attributes, name, func=None):
+            def true(this):
+                return True
+            func = func or true
+            if name not in attributes:
+                attributes[name] = true
+
         variables = {}
         attrs = dict(attributes)
+
+        # Add dependencies and dependents variables
         attributes['dependencies'] = set()
         attributes['dependents'] = set()
+
+        # Add start and stop functions
+        if_undefined(attributes, 'start')
+        if_undefined(attributes, 'started')
+        if_undefined(attributes, 'stop')
+        if_undefined(attributes, 'stopped')
 
         # Augment the class with new properties
         for key, val in attrs.iteritems():

@@ -46,7 +46,7 @@ class Command(object):
             global COUNT
             cmd = "ssh -i {} -q -o StrictHostKeyChecking=no "\
                    "{} -- {}".format(constants.DEFAULT_VM_PRIVATE_KEY,
-                   ssh.vm(), command)
+                   ssh.connect_string, command)
             Debug.cmd << cmd << "\n"
 
             return subprocess.Popen(shlex.split(cmd),
@@ -81,6 +81,7 @@ class Command(object):
 
 
         self._process = run_cmd(self._ssh, self._cmd)
+
         self._queue   = Queue.Queue()
 
         self._thread  = threading.Thread(
@@ -146,15 +147,23 @@ class WaitForSeconds(Command):
 class WaitUp(Command):
     def __init__(self, cmd='exit'):
         super(WaitUp, self).__init__(cmd)
+        self._failures = 0;
+        self._failure_threshold = 10;
 
     def start(self, ssh):
-        Debug.info << "Waiting for %s " % ssh.vm()
+        Debug.info << "Waiting for %s " % ssh.connect_string
         while True:
             super(WaitUp, self).start(ssh)
             self.wait()
+
+            self._failures += 1
+
+            if self._failures == self._failure_threshold:
+                print "VM is stale ..."
+                
             if self.process().poll() == 0:
                 Debug.info << ("\n")
-                Debug.info  << "%s is up.\n" % ssh.vm()
+                Debug.info  << "%s is up.\n" % ssh.connect_string
                 return
             Debug.info << ('.')
             time.sleep(1)
@@ -167,20 +176,22 @@ benchmark: preparing the VM, execution of benchmark, and tearing down
 the VM
 """
 class SSH:
-    def __init__(self, vm, wait_up=True):
+    def __init__(self, vm, connect_string, wait_up=True):
         self._commands = []
-        self._vm = vm
+        self._connect_string = connect_string
+        self._vm  = vm
         self._ip = None
 
-        if wait_up:
-            WaitUp().start(self)
-
     def vm(self):
+        return self._vm
+
+    @property
+    def connect_string(self):
         """
         Returns the virtual machine, for now this is just th string that
         SSH clients use to connect to the server, e.g., username@domain
         """
-        return self._vm
+        return self._connect_string
 
     def ip(self):
         """

@@ -15,6 +15,28 @@ class VirtualMachine(EntityModel):
     def __init__(self, *args, **kwargs):
         super(VirtualMachine, self).__init__(*args, **kwargs)
         self._ssh = None
+        self._started = False
+
+    def start(self):
+        """ Ask the cloud factory for a boot up """
+        self.factory.start_virtual_machine(self)
+        self._started = True
+
+    def stop(self):
+        """ Ask the cloud factory for a shutdown """
+        self.factory.stop_virtual_machine(self)
+        self._started = False
+
+    def reset(self):
+        """ Ask the cloud factory for a reset """
+        self.stop()
+        self.start()
+
+    def started(self):
+        return self._started
+
+    def stopped(self):
+        return not self._started
 
     @property
     def username(self):
@@ -36,12 +58,12 @@ class VirtualMachine(EntityModel):
         call to this function.
         """
         if new:
-            return SSH("".join([self.username, '@', self.url]))
+            return SSH(self, "".join([self.username, '@', self.url]))
 
         if self._ssh:
             return self._ssh
 
-        self._ssh = SSH("".join([self.username, '@', self.url]))
+        self._ssh = SSH(self, "".join([self.username, '@', self.url]))
         return self._ssh
 
 class VirtualNetwork(EntityModel):

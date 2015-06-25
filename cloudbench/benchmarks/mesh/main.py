@@ -50,13 +50,13 @@ def _iperf(vm1, vm2, env):
         vm1_ssh << WaitForSeconds('iperf -s -y C', 3)
 
         Debug << "Warming up ..."
-        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url())
-        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url())
-        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url())
+        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url)
+        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url)
+        vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1.url)
         vm2_ssh_warmup.terminate()
 
         Debug << "Measuring iperf"
-        vm2_ssh << WaitUntilFinished('iperf -y C -c ' + vm1.url())
+        vm2_ssh << WaitUntilFinished('iperf -y C -c ' + vm1.url)
         output = vm2_ssh.read()
 
         if not output:
@@ -86,8 +86,8 @@ def _hping(vm1, vm2, env):
     vm1_ssh = vm1.ssh(new=True)
     vm1_ssh_warmup = vm1.ssh(new=True)
 
-    query = 'sudo hping3 -c 20 -S -I eth0 -p 22 ' + vm2.url()
-    warmup = 'sudo hping3 -c 5 -S -I eth0 -p 22 ' + vm2.url()
+    query = 'sudo hping3 -c 20 -S -I eth0 -p 22 ' + vm2.url
+    warmup = 'sudo hping3 -c 5 -S -I eth0 -p 22 ' + vm2.url
 
     vm1_ssh_warmup << WaitUntilFinished(warmup)
     vm1_ssh_warmup << WaitUntilFinished(warmup)

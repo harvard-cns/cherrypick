@@ -1,6 +1,9 @@
 from cloudbench.ssh import WaitUntilFinished, WaitForSeconds
 from cloudbench.util import Debug
 
+
+TIMEOUT=300
+
 def save(env, results):
     res = results.strip().split(",")
     out = {
@@ -15,8 +18,8 @@ def save(env, results):
     env.storage().save(out)
 
 def run(env):
-    vm1 = env.vm('vm1').ssh()
-    vm2 = env.vm('vm2').ssh()
+    vm1 = env.vm('vm-east').ssh()
+    vm2 = env.vm('vm-west').ssh()
 
     Debug << "Installing iperf.\n"
     vm1 << WaitUntilFinished('sudo apt-get install iperf -y')
@@ -25,11 +28,11 @@ def run(env):
     Debug << "Running iperf client and server.\n"
     vm1 << WaitUntilFinished("killall -9 iperf")
     vm1 << WaitForSeconds('iperf -s -y C', 3)
-    vm2 << WaitUntilFinished('iperf -y C -c ' + vm1.url)
+    vm2 << WaitUntilFinished('iperf -y C -c ' + vm1.vm().url)
 
     output = vm2.read()
     Debug.cmd << output
-    save(env, output)
+    #save(env, output)
 
     vm1.terminate()
     vm2.terminate()

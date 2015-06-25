@@ -1,8 +1,34 @@
 from cloudbench.env import Env
 from cloudbench.util import Debug
+
 import argparse, os
+import multiprocessing
 
 BENCHMARK_PATH='../cloudbench/benchmarks/'
+
+def run_benchmark_with_timeout(benchmark, env, timeout=5*60):
+    # Each benchmark has a timeout to finish, this timeout
+    # is either specified in the file or set to a default value
+    # of 5 minutes
+    if hasattr(benchmark, 'TIMEOUT'):
+        timeout = benchmark.TIMEOUT
+
+    def run(benchmark, env):
+        try:
+            benchmark.run(env)
+        except Exception as e:
+            pass
+
+    proc = multiprocessing.Process(target=run, args=(benchmark, env))
+    proc.start()
+    proc.join(timeout)
+
+    if proc.is_alive():
+        print "Timed out ... killing the process"
+        proc.terminate()
+
+    return timeout
+
 
 def main():
     parser = argparse.ArgumentParser(prog='Cloudbench')
@@ -24,6 +50,9 @@ def main():
 
     parser.add_argument('-X', '--no-execute', action='store_true',
         default=False, help='Do not execute the benchmark')
+
+    parser.add_argument('--test', action='store_true',
+        default=False, help='Do not run anything, just print out the sequence of commands')
 
     parser.add_argument('--benchmark',
         help='Name of the benchmark that will be executed')
@@ -56,6 +85,9 @@ def main():
               args.benchmark,
               args.storage)
 
+    if args.test:
+        env.test(True)
+
     if args.setup:
         env.setup()
 
@@ -63,7 +95,7 @@ def main():
         env.start()
 
     if not args.no_execute:
-        mod.run(env)
+        run_benchmark_with_timeout(mod, env)
 
     if args.stop:
         env.stop()

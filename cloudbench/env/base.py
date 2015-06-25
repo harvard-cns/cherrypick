@@ -15,14 +15,13 @@ class Env(object):
         self._storage = storage
         self._benchmark = benchmark
         self._uuid = 'cb'
+        self._test = False
 
-    def namify(self, obj):
-        """ Normalize the name of objects based on the benchmark and the
-        actual object name """
-        if obj is None:
-            return None
-        return self._uuid + self.benchmark_name() + str(obj).lower()
+    def test(self, val):
+        self._test = not (not val)
 
+    def is_test(self):
+        return self._test
 
     def config(self):
         """ Return the configuration """
@@ -82,112 +81,68 @@ class Env(object):
 
         return getattr(self.config(), name)
 
-    # def address_vm(self, vm):
-    #     return self.manager().address_vm(vm)
+    def traverse_dag(self, check, execute, direction='dependencies'):
+        """ Traverse from the leaves upward to root, making sure all
+        the leaves of a node have executed the "execute" function before
+        the node is executed """
 
-    # def stop_vm(self, vm):
-    #     return self.manager().stop_vm(vm)
+        def satisfied(ent):
+            """ Returns true if the requirement of an entity are
+            satisfied """
+            for dep in getattr(ent, direction):
+                deps = getattr(ent, dep)()
+                if not deps:
+                    continue
 
-    # def start_vm(self, vm):
-    #     return self.manager().start_vm(vm)
+                if not isinstance(deps, list):
+                    deps = [deps]
 
-    # def delete_vm(self, vm):
-    #     return self.manager().delete_vm(vm)
+                # if any of the dependencies are not satisfied, return
+                # False
+                if any(map(lambda x: not check(x), deps)):
+                    return False
 
-    # def delete_vnet(self, vnet):
-    #     return self.manager().delete_vnet(vnet)
+            return True
 
-    # def delete_group(self, group):
-    #     return self.manager().delete_group(group)
+        # Collect everything
+        everything = set()
+        for ent in self.entities().values():
+            everything = everything.union(set(ent.values()))
 
-    # def create_vm_endpoint(self, vm, endpoint):
-    #     return self.manager().create_vm_endpoint(vm, endpoint)
+        while everything:
+            to_remove = set()
+            to_execute = set()
+            for ent in everything:
+                if satisfied(ent):
+                    if not check(ent):
+                        to_execute.add(ent)
+                    else:
+                        to_remove.add(ent)
 
-    # def create_vm(self, vm):
-    #     return self.manager().create_vm(vm)
-
-    # def create_vnet(self, vnet):
-    #     return self.manager().create_vnet(vnet)
-
-    # def create_group(self, group):
-    #     return self.manager().create_group(group)
+            parallel(lambda x: execute(x), to_execute)
+            to_remove = to_remove.union(set(filter(lambda x: check(x), to_execute)))
+            everything = everything - to_remove
 
     def setup(self):
         """ Setup the VMs """
-        def satisfied(ent):
-            """ Returns true if the requirement of an entity are
-            satisfied """
-            for dep in ent.dependencies:
-                deps = getattr(ent, dep)()
-                if not deps:
-                    continue
-                
-                if not isinstance(deps, list):
-                    deps = [deps]
-
-                # if any of the dependencies are not satisfied, return
-                # False
-                if any(map(lambda x: not x.created(), deps)):
-                    return False
-
-            return True
-
-        # Collect everything
-        everything = set()
-        for ent in self.entities().values():
-            everything = everything.union(set(ent.values()))
-
-        while everything:
-            to_remove = set()
-            to_create = set()
-            for ent in everything:
-                if satisfied(ent) and not ent.created():
-                    to_create.add(ent)
-
-            parallel(lambda x: x.create(), to_create)
-            to_remove = set(filter(lambda x: x.created(), to_create))
-            everything = everything - to_remove
+        self.traverse_dag(lambda x: x.created(),
+                          lambda x: x.create(),
+                          'dependencies')
 
     def teardown(self):
         """ Delete everything """
-        def satisfied(ent):
-            """ Returns true if the requirement of an entity are
-            satisfied """
-            for dep in ent.dependents:
-                deps = getattr(ent, dep)()
-                if not deps:
-                    continue
-                
-                if not isinstance(deps, list):
-                    deps = [deps]
-
-                # if any of the dependencies are not satisfied, return
-                # False
-                if any(map(lambda x: not x.deleted(), deps)):
-                    return False
-
-            return True
-
-        # Collect everything
-        everything = set()
-        for ent in self.entities().values():
-            everything = everything.union(set(ent.values()))
-
-        while everything:
-            to_remove = set()
-            to_delete = set()
-            for ent in everything:
-                if satisfied(ent) and not ent.deleted():
-                    to_delete.add(ent)
-
-            parallel(lambda x: x.delete(), to_delete)
-            to_remove = set(filter(lambda x: x.deleted(), to_delete))
-            everything = everything - to_remove
+        self.traverse_dag(lambda x: x.deleted(),
+                          lambda x: x.delete(),
+                          'dependents')
 
     def start(self):
-        """ Start the VMs in parallel """
-        parallel(lambda vm: vm.start(True), self.virtual_machines())
+        """ Start the topology in parallel """
+        self.traverse_dag(lambda x: x.started(),
+                          lambda x: x.start(),
+                          'dependencies')
 
     def stop(self):
-        """ Stop the VMs in parallel """
-        parallel(lambda vm: vm.stop(True), self.virtual_machines())
+        """ Stop the topology in parallel """
+        self.traverse_dag(lambda x: x.stopped(),
+                          lambda x: x.stop(),
+                          'dependents')

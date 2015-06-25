@@ -1,124 +1,100 @@
 <config>
-    <azure>
         <!-- Used to put VMs together -->
-        <groups>
-            <group storage-type='LRS' name='gwestus' location='West US' />
-            <group storage-type='LRS' name='gcentralus' location='Central US' />
-            <group storage-type='LRS' name='gsouthcentralus' location='South Central US'  />
-            <group storage-type='LRS' name='geastus' location='East US' />
-            <group storage-type='LRS' name='gnorthcentralus' location='North Central US' />
-            <group storage-type='LRS' name='geastus2' location='East US 2' />
-            <group storage-type='LRS' name='gnortheurope' location='North Europe' />
-            <group storage-type='LRS' name='gwesteurope' location='West Europe' />
-            <group storage-type='LRS' name='gsoutheastasia' location='Southeast Asia' />
-            <group storage-type='LRS' name='geastasia' location='East Asia' />
-            <group storage-type='LRS' name='gjapanwest' location='Japan West'  />
-            <group storage-type='LRS' name='gjapaneast' location='Japan East' />
-            <group storage-type='LRS' name='gbrazilsouth' location='Brazil South' />
-            <group storage-type='LRS' name='gaustraliasoutheast' location='Australia Southeast' />
-            <group storage-type='LRS' name='gaustraliaeast' location='Australia East' />
-        </groups>
+    <locations>
+        <location name='gwestus'              location='config:westus'             />
+        <location name='gcentralus'           location='config:centralus'          />
+        <location name='gsouthcentralus'      location='config:southcentralus'     />
+        <location name='geastus'              location='config:eastus'             />
+        <location name='gnorthcentralus'      location='config:northcentralus'     />
+        <location name='geastus2'             location='config:eastus2'            />
+        <location name='gnortheurope'         location='config:northeurope'        />
+        <location name='gwesteurope'          location='config:westeurope'         />
+        <location name='gsoutheastasia'       location='config:southeastasia'      />
+        <location name='geastasia'            location='config:eastasia'           />
+        <location name='gjapanwest'           location='config:japanwest'          />
+        <location name='gjapaneast'           location='config:japaneast'          />
+        <location name='gbrazilsouth'         location='config:brazilsouth'        />
+        <location name='gaustraliasoutheast'  location='config:australiasoutheast' />
+        <location name='gaustraliaeast'       location='config:australiaeast'      />
+    </locations>
 
-        <virtual-machines>
-            <!-- Group 1 -->
-            <virtual-machine name='vmwestus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gwestus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gcentralus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmsouthcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gsouthcentralus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmeastus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmnorthcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gnorthcentralus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmeastus2' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastus2'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmnortheurope' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gnortheurope'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmwesteurope' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gwesteurope'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmsoutheastasia' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gsoutheastasia'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmeastasia' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastasia'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmjapanwest' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gjapanwest'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmjapaneast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gjapaneast'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmbrazilsouth' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gbrazilsouth'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmaustraliasoutheast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gaustraliasoutheast'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vmaustraliaeast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gaustraliaeast'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
+    <security-groups>
+        <security-group name='iperf' public-port='5001' private-port='5001' virtual-machines='vmwestus,vmcentralus,vmsouthcentralus,vmeastus,vmnorthcentralus,vmeastus2,vmnortheurope,vmwesteurope,vmsoutheastasia,vmeastasia,vmjapanwest,vmjapaneast,vmbrazilsouth,vmaustraliasoutheast,vmaustraliaeast,vm2westus,vm2centralus,vm2southcentralus,vm2eastus,vm2northcentralus,vm2eastus2,vm2northeurope,vm2westeurope,vm2southeastasia,vm2eastasia,vm2japanwest,vm2japaneast,vm2brazilsouth,vm2australiasoutheast,vm2australiaeast' />
+    </security-groups>
 
-            <!-- Group 2 -->
-            <virtual-machine name='vm2westus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gwestus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2centralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gcentralus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2southcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gsouthcentralus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2eastus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2northcentralus' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gnorthcentralus'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2eastus2' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastus2'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2northeurope' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gnortheurope'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2westeurope' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gwesteurope'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2southeastasia' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gsoutheastasia'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2eastasia' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='geastasia'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2japanwest' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gjapanwest'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2japaneast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gjapaneast'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2brazilsouth' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gbrazilsouth'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2australiasoutheast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gaustraliasoutheast'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-            <virtual-machine name='vm2australiaeast' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='ExtraLarge'  group='gaustraliaeast'>
-                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
-            </virtual-machine>
-        </virtual-machines>
+    <virtual-machines>
+        <!-- Group 1 -->
+        <virtual-machine name='vmwestus'                image='config:image' type='config:vm-type' location='gwestus'/>
+        <virtual-machine name='vmcentralus'             image='config:image' type='config:vm-type' location='gcentralus'/>
+        <virtual-machine name='vmsouthcentralus'        image='config:image' type='config:vm-type' location='gsouthcentralus'/>
+        <virtual-machine name='vmeastus'                image='config:image' type='config:vm-type' location='geastus'/>
+        <virtual-machine name='vmnorthcentralus'        image='config:image' type='config:vm-type' location='gnorthcentralus'/>
+        <virtual-machine name='vmeastus2'               image='config:image' type='config:vm-type' location='geastus2'/>
+        <virtual-machine name='vmnortheurope'           image='config:image' type='config:vm-type' location='gnortheurope'/>
+        <virtual-machine name='vmwesteurope'            image='config:image' type='config:vm-type' location='gwesteurope'/>
+        <virtual-machine name='vmsoutheastasia'         image='config:image' type='config:vm-type' location='gsoutheastasia'/>
+        <virtual-machine name='vmeastasia'              image='config:image' type='config:vm-type' location='geastasia'/>
+        <virtual-machine name='vmjapanwest'             image='config:image' type='config:vm-type' location='gjapanwest'/>
+        <virtual-machine name='vmjapaneast'             image='config:image' type='config:vm-type' location='gjapaneast'/>
+        <virtual-machine name='vmbrazilsouth'           image='config:image' type='config:vm-type' location='gbrazilsouth'/>
+        <virtual-machine name='vmaustraliasoutheast'    image='config:image' type='config:vm-type' location='gaustraliasoutheast'/>
+        <virtual-machine name='vmaustraliaeast'         image='config:image' type='config:vm-type' location='gaustraliaeast'/>
 
-        <virtual-networks>
-        </virtual-networks>
+        <!-- Group 2 -->
+        <virtual-machine name='vm2westus'                image='config:image' type='config:vm-type' location='gwestus'/>
+        <virtual-machine name='vm2centralus'             image='config:image' type='config:vm-type' location='gcentralus'/>
+        <virtual-machine name='vm2southcentralus'        image='config:image' type='config:vm-type' location='gsouthcentralus'/>
+        <virtual-machine name='vm2eastus'                image='config:image' type='config:vm-type' location='geastus'/>
+        <virtual-machine name='vm2northcentralus'        image='config:image' type='config:vm-type' location='gnorthcentralus'/>
+        <virtual-machine name='vm2eastus2'               image='config:image' type='config:vm-type' location='geastus2'/>
+        <virtual-machine name='vm2northeurope'           image='config:image' type='config:vm-type' location='gnortheurope'/>
+        <virtual-machine name='vm2westeurope'            image='config:image' type='config:vm-type' location='gwesteurope'/>
+        <virtual-machine name='vm2southeastasia'         image='config:image' type='config:vm-type' location='gsoutheastasia'/>
+        <virtual-machine name='vm2eastasia'              image='config:image' type='config:vm-type' location='geastasia'/>
+        <virtual-machine name='vm2japanwest'             image='config:image' type='config:vm-type' location='gjapanwest'/>
+        <virtual-machine name='vm2japaneast'             image='config:image' type='config:vm-type' location='gjapaneast'/>
+        <virtual-machine name='vm2brazilsouth'           image='config:image' type='config:vm-type' location='gbrazilsouth'/>
+        <virtual-machine name='vm2australiasoutheast'    image='config:image' type='config:vm-type' location='gaustraliasoutheast'/>
+        <virtual-machine name='vm2australiaeast'         image='config:image' type='config:vm-type' location='gaustraliaeast'/>
+    </virtual-machines>
 
-        <storages>
-        </storages>
+    <azure>
+        <config name='storage' value='LRS' />
+        <config name='vm-type' value='ExtraLarge' />
+        <config name='image'   value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+
+        <config name='westus'             value='West US'              />
+        <config name='centralus'          value='Central US'           />
+        <config name='southcentralus'     value='South Central US'     />
+        <config name='eastus'             value='East US'              />
+        <config name='northcentralus'     value='North Central US'     />
+        <config name='eastus2'            value='East US 2'            />
+        <config name='northeurope'        value='North Europe'         />
+        <config name='westeurope'         value='West Europe'          />
+        <config name='southeastasia'      value='Southeast Asia'       />
+        <config name='eastasia'           value='East Asia'            />
+        <config name='japanwest'          value='Japan West'           />
+        <config name='japaneast'          value='Japan East'           />
+        <config name='brazilsouth'        value='Brazil South'         />
+        <config name='australiasoutheast' value='Australia Southeast'  />
+        <config name='australiaeast'      value='Australia East'       />
+
+        <locations>
+            <add-values name='gwestus'             storage-type='config:storage'/>
+            <add-values name='gcentralus'          storage-type='config:storage'/>
+            <add-values name='gsouthcentralus'     storage-type='config:storage'/>
+            <add-values name='geastus'             storage-type='config:storage'/>
+            <add-values name='gnorthcentralus'     storage-type='config:storage'/>
+            <add-values name='geastus2'            storage-type='config:storage'/>
+            <add-values name='gnortheurope'        storage-type='config:storage'/>
+            <add-values name='gwesteurope'         storage-type='config:storage'/>
+            <add-values name='gsoutheastasia'      storage-type='config:storage'/>
+            <add-values name='geastasia'           storage-type='config:storage'/>
+            <add-values name='gjapanwest'          storage-type='config:storage'/>
+            <add-values name='gjapaneast'          storage-type='config:storage'/>
+            <add-values name='gbrazilsouth'        storage-type='config:storage'/>
+            <add-values name='gaustraliasoutheast' storage-type='config:storage'/>
+            <add-values name='gaustraliaeast'      storage-type='config:storage'/>
+        </locations>
     </azure>
 </config>
