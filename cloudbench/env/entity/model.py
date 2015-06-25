@@ -16,16 +16,19 @@ class VirtualMachine(EntityModel):
         super(VirtualMachine, self).__init__(*args, **kwargs)
         self._ssh = None
         self._started = False
+        self._stopped = False
 
     def start(self):
         """ Ask the cloud factory for a boot up """
         self.factory.start_virtual_machine(self)
         self._started = True
+        self._stopped = False
 
     def stop(self):
         """ Ask the cloud factory for a shutdown """
         self.factory.stop_virtual_machine(self)
         self._started = False
+        self._stopped = True
 
     def reset(self):
         """ Ask the cloud factory for a reset """
@@ -36,7 +39,7 @@ class VirtualMachine(EntityModel):
         return self._started
 
     def stopped(self):
-        return not self._started
+        return self._stopped
 
     @property
     def username(self):

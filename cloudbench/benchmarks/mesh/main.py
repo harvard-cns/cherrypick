@@ -5,6 +5,9 @@ from multiprocessing.pool import ThreadPool
 import re
 import traceback, sys
 
+# Timeout of 50 minutes
+TIMEOUT=50*60
+
 def unixify(name):
     return name.lower().replace(' ', '_')
 
@@ -63,7 +66,7 @@ def _iperf(vm1, vm2, env):
             continue
 
         Debug.cmd << output
-        save_iperf(env, output, vm1.group().location(), vm2.group().location())
+        save_iperf(env, output, vm1.location().location, vm2.location().location)
 
         vm1_ssh.terminate()
         vm2_ssh.terminate()
@@ -99,7 +102,7 @@ def _hping(vm1, vm2, env):
     vm1_ssh.terminate()
 
     rtts = _extract_rtts(vm1_ssh.read())
-    save_hping(env, rtts, vm2.group().location(), vm1.group().location())
+    save_hping(env, rtts, vm2.location().location, vm1.location().location)
 
 # Iperf both sides
 def experiment(params):
@@ -118,8 +121,8 @@ def run(env):
     regions = {}
 
     # Categorize VMs based on their location
-    for vm in env.virtual_machines():
-        group_name = vm.group().name
+    for _, vm in env.virtual_machines().iteritems():
+        group_name = vm.location().name
         if group_name not in regions:
             regions[group_name] = []
         regions[group_name].append(vm)
@@ -129,8 +132,8 @@ def run(env):
         vm.ssh() << WaitUntilFinished("sudo apt-get install hping3 -y")
         vm.ssh() << WaitUntilFinished("sudo apt-get install iperf -y")
 
-    pool = ThreadPool(len(env.virtual_machines()))
-    pool.map(install, env.virtual_machines())
+    pool = ThreadPool(len(env.virtual_machines().values()))
+    pool.map(install, env.virtual_machines().values())
 
     # Inter-location iperf/hping
     for key1 in regions:
@@ -139,7 +142,7 @@ def run(env):
             if (key1 != key2):
                 jobs.append((regions[key2][0], regions[key1][0], env,))
                 
-        pool = ThreadPool(len(env.groups())-1)
+        pool = ThreadPool(len(env.locations())-1)
         pool.map(experiment, jobs)
 
 

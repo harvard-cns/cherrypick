@@ -4,6 +4,9 @@ from cloudbench.util import Debug
 import argparse, os
 import multiprocessing
 
+import traceback
+import sys
+
 BENCHMARK_PATH='../cloudbench/benchmarks/'
 
 def run_benchmark_with_timeout(benchmark, env, timeout=5*60):
@@ -16,8 +19,8 @@ def run_benchmark_with_timeout(benchmark, env, timeout=5*60):
     def run(benchmark, env):
         try:
             benchmark.run(env)
-        except Exception as e:
-            pass
+        except Exception, err:
+            print(traceback.format_exc())
 
     proc = multiprocessing.Process(target=run, args=(benchmark, env))
     proc.start()
