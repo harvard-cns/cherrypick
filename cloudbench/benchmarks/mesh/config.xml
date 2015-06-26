@@ -78,7 +78,7 @@
 
     <azure>
         <config name='storage' value='LRS' />
-        <config name='vm-type' value='ExtraLarge' />
+        <config name='vm-type' value='Medium' />
         <config name='image'   value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
 
         <config name='westus'             value='West US'              />

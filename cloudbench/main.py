@@ -23,6 +23,7 @@ def run_benchmark_with_timeout(benchmark, env, timeout=5*60):
             print(traceback.format_exc())
 
     proc = multiprocessing.Process(target=run, args=(benchmark, env))
+    proc.daemon = True
     proc.start()
     proc.join(timeout)
 

@@ -16,23 +16,25 @@ def _extract_rtts(hping_result):
     rtts.sort()
     return rtts
 
-def hping(vm1, vm2, env):
-    vm1_ssh = vm1.ssh(new=True)
-    vm1_ssh_warmup = vm1.ssh(new=True)
+def _hping_ip(vm1, vm2, vm2_address):
+    rtts = []
 
-    query = 'sudo hping3 -c 20 -S -I eth0 -p 22 ' + vm2.url
-    warmup = 'sudo hping3 -c 5 -S -I eth0 -p 22 ' + vm2.url
+    while not(rtts):
+        vm1_ssh = vm1.ssh(new=True)
+        vm1_ssh_warmup = vm1.ssh(new=True)
+        query = 'sudo hping3 -c 20 -S -I eth0 -p 22 ' + vm2_address
+        warmup = 'sudo hping3 -c 5 -S -I eth0 -p 22 ' + vm2_address
 
-    # Run a warmup
-    for _ in range(3):
-        vm1_ssh_warmup << WaitUntilFinished(warmup)
+        # Run a warmup
+        for _ in range(3):
+            vm1_ssh_warmup << WaitUntilFinished(warmup)
 
-    vm1_ssh_warmup.terminate()
+        vm1_ssh_warmup.terminate()
 
-    vm1_ssh << WaitUntilFinished(query)
-    vm1_ssh.terminate()
+        vm1_ssh << WaitUntilFinished(query)
+        vm1_ssh.terminate()
 
-    rtts = _extract_rtts(vm1_ssh.read())
+        rtts = _extract_rtts(vm1_ssh.read())
 
     out = {
         'server_location': vm2.location().location, # The VM the answered the ping
@@ -46,6 +48,16 @@ def hping(vm1, vm2, env):
     }
 
     return out
+
+def hping(vm1, vm2, env):
+    return _hping_ip(vm1, vm2, vm2.url)
+
+def hping_vnet(vm1, vm2, env):
+    vm2_ssh = vm1.ssh(new=True)
+    vm2_ssh << WaitUntilFinished("hostname -I")
+    vm2_ip = vm2_ssh.read()
+
+    return _hping_ip(vm1, vm2, vm2_ip)
 
 def run(env):
     vm_east = env.vm('vm-east').ssh()
