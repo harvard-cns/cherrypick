@@ -15,5 +15,5 @@ class BaseStorage(object):
 
         return str(int((time() - self._delta)*100)).zfill(14)
 
-    def save(self, env):
+    def save(self, dic):
         pass

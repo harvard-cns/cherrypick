@@ -46,7 +46,7 @@ class Relation(object):
             # here? e.g., virtual_machine vs. virtual_machines
             name  = inflection.dasherize(inflection.underscore(this.__class__.__name__))
             names = inflection.pluralize(name)
-            entities = this.env.config().get(_get_method).iteritems()
+            entities = this.env.config.get(_get_method).iteritems()
 
             ret = []
             for key, entity in entities:
@@ -70,7 +70,7 @@ class Relation(object):
         def get(this):
             name  = inflection.dasherize(inflection.underscore(this.__class__.__name__))
             names = inflection.pluralize(name)
-            entities = this.env.config().get(_get_method).iteritems()
+            entities = this.env.config.get(_get_method).iteritems()
 
             for key, entity in entities:
                 if (name in entity.config) and (entity.config[name] == this.name):
@@ -96,7 +96,7 @@ class Relation(object):
                 return None
 
             return next(val for key, val in
-                    this.env.config().get(_get_config_method).iteritems() if
+                    this.env.config.get(_get_config_method).iteritems() if
                     (val.name == this.config[_key]))
         attributes[_get_method] = get
         return _get_method
@@ -116,7 +116,7 @@ class Relation(object):
                 return {}
 
             return [val for key, val in
-                    this.env.config().get(_get_config_method).iteritems() if
+                    this.env.config.get(_get_config_method).iteritems() if
                     val.name in this.config[_key].split(",")]
         attributes[_get_method] = get
         return _get_method
@@ -125,7 +125,7 @@ class Relation(object):
 #   def augment_auto_get(self, attributes, name):
 #       _get_method = inflection.pluralize(name)
 #       def get(this):
-#           return this.config().get(_get_method).values()
+#           return this.config.get(_get_method).values()
 #       attributes[_get_method] = get
 #       return _get_method
 #

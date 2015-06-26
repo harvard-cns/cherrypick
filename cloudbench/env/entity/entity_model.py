@@ -3,6 +3,8 @@ import inflection
 from .relation import Relation
 from threading import RLock
 
+import pdb
+
 def call_parents(name):
     def func(self, *args, **kwargs):
         return getattr(super(self.__class__, self), name)(*args, **kwargs)
@@ -132,7 +134,7 @@ class EntityModel(object):
 
     @property
     def factory(self):
-        return self.env.manager()
+        return self.env.manager
 
     @property
     def env(self):

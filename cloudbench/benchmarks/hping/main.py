@@ -60,12 +60,12 @@ def hping_vnet(vm1, vm2, env):
     return _hping_ip(vm1, vm2, vm2_ip)
 
 def run(env):
-    vm_east = env.vm('vm-east').ssh()
-    vm_west = env.vm('vm-west').ssh()
+    vm_east = env.vm('vm-east')
+    vm_west = env.vm('vm-west')
 
     Debug << 'Installing hping3\n'
-    vm_east << WaitUntilFinished('sudo apt-get install hping3 -y')
-    vm_west << WaitUntilFinished('sudo apt-get install hping3 -y')
+    vm_east.ssh() << WaitUntilFinished('sudo apt-get install hping3 -y')
+    vm_west.ssh() << WaitUntilFinished('sudo apt-get install hping3 -y')
 
     output = hping(vm_east, vm_west, env)
     print output

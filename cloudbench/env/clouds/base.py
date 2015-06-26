@@ -35,11 +35,14 @@ class Cloud(object):
         if name is None:
             return None
 
-        return 'cb' + self.env.benchmark_name() + str(name)
-
+        return 'cb' + self.env.benchmark.name + str(name)
 
     def if_available(self, option, value):
         if value:
             return [option,'"' + str(value) + '"']
         return []
 
+
+    @property
+    def data(self):
+        return self.env.benchmark.data

@@ -8,4 +8,6 @@ config/cloud.key
 config/cloud.pem
 tools/coremark_v1.0.tgz
 
-# PyBuilder
+# Cloud storage files for benchmarks
+azure.json
+aws.json

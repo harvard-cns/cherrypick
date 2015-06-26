@@ -1,19 +1,30 @@
 <config>
+    <locations>
+        <location name='west-us' location='config:west'/>
+        <location name='east-us' location='config:east'/>
+    </locations>
+
+    <virtual-machines>
+        <virtual-machine name='vm-west' image='config:ubuntu' type='config:size' location='west-us'/>
+        <virtual-machine name='vm-east' image='config:ubuntu' type='config:size' location='east-us'/>
+    </virtual-machines>
+
     <azure>
-        <groups>
-            <group name='g1' location='West US' storage-type='LRS'/>
-            <group name='g2' location='East US' storage-type='LRS'/>
-        </groups>
+        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='size'   value='Small' />
+        <config name='west'   value='West US' />
+        <config name='east'   value='East US' />
 
-        <virtual-machines>
-            <virtual-machine name='vm-west' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='Small' group='g1' />
-            <virtual-machine name='vm-east' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='Small'  group='g2' />
-        </virtual-machines>
-
-        <virtual-networks>
-        </virtual-networks>
-
-        <storages>
-        </storages>
+        <locations>
+            <add-values name='west-us' storage-type='LRS' /> 
+            <add-values name='east-us' storage-type='LRS' /> 
+        </locations>
     </azure>
+
+    <aws>
+        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='size'   value='Small' />
+        <config name='west'   value='West US' />
+        <config name='east'   value='East US' />
+    </aws>
 </config>

@@ -10,7 +10,7 @@ class AzureStorage(BaseStorage):
                 account_name=Config.azure_storage_account_name,
                 account_key=Config.azure_storage_account_key)
 
-        self._benchmark = self._env.benchmark_name()
+        self._benchmark = self._env.benchmark.name
 
         # Make sure our table exists
         Debug.info << "Creating tableservice for benchmark : " << \
@@ -19,7 +19,7 @@ class AzureStorage(BaseStorage):
         self._ts.create_table(self.table_name())
 
     def table_name(self):
-        return self._env.benchmark_name()
+        return self._env.benchmark.name
 
     def save(self, dic, partition=None, key=''):
         dic['RowKey'] = self.timestamp()
@@ -29,7 +29,7 @@ class AzureStorage(BaseStorage):
 
         # Don't really need the partition key right now
         if partition is None:
-            dic['PartitionKey'] = self._env.benchmark_name()
+            dic['PartitionKey'] = self._env.benchmark.name
         else:
             dic['PartitionKey'] = partition
 

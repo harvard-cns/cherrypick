@@ -1,10 +1,49 @@
 from cloudbench.env.config.xml_config import EnvXmlConfig
 from cloudbench.env.clouds import AzureCloud, AwsCloud
-from cloudbench.storage import AzureStorage, FileStorage
+from cloudbench.storage import AzureStorage, FileStorage, JsonStorage
 from cloudbench.util import parallel
 
 import threading
 import time
+import os
+
+class Benchmark(object):
+    def __init__(self, name, directory, env):
+        self._config = None
+        self._env = env
+        self._name = name
+
+        self._file = os.path.join(directory, 'config.xml')
+
+        self._storage_path = os.path.join(directory, env.cloud_name + '.json')
+        self._storage = None
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def env(self):
+        return self._env
+
+    @property
+    def config(self):
+        """ Return the configuration """
+        if self._config:
+            return self._config
+        if '.xml' in self._file:
+            self._config = EnvXmlConfig(self._file, self.env.cloud_name, self.env)
+            self._config.parse()
+
+        return self._config
+
+    @property
+    def data(self):
+        if self._storage:
+            return self._storage
+
+        self._storage = JsonStorage(self._env, self._storage_path)
+        return self._storage
 
 class Env(object):
     def __init__(self, cloud, f, benchmark, storage):
@@ -13,9 +52,12 @@ class Env(object):
         self._config = None
         self._manager = None
         self._storage = storage
-        self._benchmark = benchmark
         self._uuid = 'cb'
         self._test = False
+
+        self._benchmark = Benchmark(benchmark, 
+                os.path.abspath(os.path.join(self._file, os.pardir)),
+                self)
 
     def test(self, val):
         self._test = not (not val)
@@ -23,16 +65,12 @@ class Env(object):
     def is_test(self):
         return self._test
 
+    @property
     def config(self):
         """ Return the configuration """
-        if self._config:
-            return self._config
-        if '.xml' in self._file:
-            self._config = EnvXmlConfig(self._file, self._cloud, self)
-            self._config.parse()
+        return self.benchmark.config
 
-        return self._config
-
+    @property
     def manager(self):
         """ Return the manager """
         if self._manager:
@@ -50,15 +88,15 @@ class Env(object):
         if isinstance(self._storage, str):
             if self._storage == 'azure':
                 self._storage = AzureStorage(self)
-            elif self._storage == 'file':
-                self._storage = FileStorage(self)
 
         return self._storage
 
-    def benchmark_name(self):
-        """ Returns the name of the active benchmark """
+    @property
+    def benchmark(self):
+        """ Returns the active benchmark """
         return self._benchmark
 
+    @property
     def cloud_name(self):
         """ Returns the name of the cloud provider """
         return self._cloud
@@ -73,13 +111,13 @@ class Env(object):
         """ Delegates methods that are not defined to the manager """
 
         if name.startswith('create') or name.startswith('delete'):
-            if hasattr(self.manager(), name):
-                return getattr(self.manager(), name)
+            if hasattr(self.manager, name):
+                return getattr(self.manager, name)
 
             raise AttributeError("'%s' object has no attribute '%s'" %
                                  (self.__class__.__name__, name))
 
-        return getattr(self.config(), name)
+        return getattr(self.config, name)
 
     def traverse_dag(self, check, execute, direction='dependencies'):
         """ Traverse from the leaves upward to root, making sure all
@@ -97,14 +135,13 @@ class Env(object):
                 if not isinstance(deps, list):
                     deps = [deps]
 
-                # if any of the dependencies are not satisfied, return
-                # False
+                # if any of the dependencies are not satisfied, return False
                 if any(map(lambda x: not check(x), deps)):
                     return False
 
             return True
 
-        # Collect everything
+        # Collect all entities
         everything = set()
         for ent in self.entities().values():
             everything = everything.union(set(ent.values()))
