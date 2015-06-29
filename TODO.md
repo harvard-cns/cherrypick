@@ -15,3 +15,5 @@ creating benchmarks per tool, which is actually not we want ... a tool
 should be *contained* by itself, so that it can be used in different
 scenarios -- and get automatically installed by the virtual-machine if
 it was required for a specific benchmark.  Thoughts?
+
+4) Start writing tests ... but they are required.
