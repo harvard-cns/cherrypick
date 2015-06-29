@@ -4,12 +4,13 @@ from multiprocessing.pool import ThreadPool
 
 from cloudbench.benchmarks.iperf.main import iperf, iperf_vnet
 from cloudbench.benchmarks.hping.main import hping, hping_vnet
+from cloudbench.benchmarks.io.main import fio
 
 import re
 import traceback, sys
 
 # Timeout of 50 minutes
-TIMEOUT=50*60
+TIMEOUT=60*60
 
 def unixify(name):
     return name.lower().replace(' ', '_')
@@ -17,17 +18,15 @@ def unixify(name):
 def save(env, results, benchmark, server, client):
     env.storage().save(results, partition=benchmark, key=(unixify(server) + '_' + unixify(client)))
 
-# Iperf both sides
-def experiment(params):
-    vm1, vm2, env = params
+
+def inter_experiment(params):
+    """ Run inter dc experiments """
+    vm1, vm2, experiments, env = params
     try:
         # Save iperf results
-        output = iperf(vm1, vm2, env)
-        save(env, output, 'iperfmesh', vm1.location().location, vm2.location().location)
-
-        # Save hping results
-        output = hping(vm1, vm2, env)
-        save(env, output, 'hpingmesh', vm2.location().location, vm1.location().location)
+        for exp in experiments:
+            output = globals()[exp](vm1, vm2, env)
+            save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
     except:
         print "Exception in user code:"
         print '-' * 60
@@ -35,15 +34,14 @@ def experiment(params):
         print '-' * 60
         exit()
 
-def vnet_experiment(params):
-    vm1, vm2, env = params
+def intra_experiment(params):
+    """ Run intra dc experiments """
+    vm1, vm2, experiments, env = params
 
     try:
-        # output = hping_vnet(vm1, vm2, env)
-        # save(env, output, 'hpingmeshvnet', vm2.location().location, vm1.location().location)
-
-        output = iperf_vnet(vm1, vm2, env)
-        save(env, output, 'iperfmeshvnet', vm1.location().location, vm2.location().location)
+        for exp in experiments:
+            output = globals()[exp](vm1, vm2, env)
+            save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
     except:
         print "Exception in user code:"
         print '-' * 60
@@ -51,9 +49,23 @@ def vnet_experiment(params):
         print '-' * 60
         exit()
 
-def run(env):
-    regions = {}
+def single_experiment(params):
+    """ Runs single VM experiments """
+    vm, experiments, env = params
+    try:
+        for exp in experiments:
+            output = globals()[exp](vm, env)
+            save(env, output, exp+'mesh', vm.location().location, '')
+    except:
+        print "Exception in user code:"
+        print '-' * 60
+        traceback.print_exc(file=sys.stdout)
+        print '-' * 60
+        exit()
 
+def categorize(env):
+    """ Categorize the available virtual machines in each region"""
+    regions = {}
     # Categorize VMs based on their location
     for _, vm in env.virtual_machines().iteritems():
         group_name = vm.location().name
@@ -61,39 +73,77 @@ def run(env):
             regions[group_name] = []
         regions[group_name].append(vm)
 
+    return regions
+
+def prepare(env):
+    """ Prepare the environment, e.g., install any required
+    applications, etc. """
     def install(vm):
+        """ Install the required applications for the VM """
         vm.ssh() << WaitUntilFinished("sudo apt-get install hping3 -y")
         vm.ssh() << WaitUntilFinished("sudo apt-get install iperf -y")
+        vm.ssh() << WaitUntilFinished("sudo apt-get install fio -y")
 
     pool = ThreadPool(len(env.virtual_machines().values()))
     pool.map(install, env.virtual_machines().values())
 
-    region_names = regions.keys()
-    start = 1
-
-    # VNet iperf/hping
+def single_dc(regions, env, experiments):
+    """ Run the intra-dc experiments """
     jobs = []
     for key1 in regions:
-        jobs.append((regions[key1][0], regions[key1][1], env,))
+        jobs.append((regions[key1][0], experiments, env,))
 
     pool = ThreadPool(len(env.locations()))
-    pool.map(vnet_experiment, jobs)
+    pool.map(single_experiment, jobs)
+
+def intra_dc(regions, env, experiments):
+    """ Run the intra-dc experiments """
+    jobs = []
+    for key1 in regions:
+        jobs.append((regions[key1][0], regions[key1][1], experiments, env,))
+
+    pool = ThreadPool(len(env.locations()))
+    pool.map(intra_experiment, jobs)
+
+def inter_dc(regions, env, experiments):
+    """ Run inter-dc experiments between all pairs of VMs
+        
+    The order of execution is such that no virtual machine will be
+    executing two benchmarks at the same time.
+    """
+    region_names = regions.keys()
+    start = 1
 
     # Inter-location iperf/hping
     for start in range(1, len(env.locations())):
         jobs = []
         for idx, reg_src in enumerate(region_names):
             reg_dst = region_names[(start + idx) % len(region_names)]
-            jobs.append((regions[reg_src][0], regions[reg_dst][1], env,))
+            jobs.append((regions[reg_src][0], regions[reg_dst][1],
+                experiments, env,))
         pool = ThreadPool(len(env.locations())-1)
-        pool.map(experiment, jobs)
+        pool.map(inter_experiment, jobs)
 
 
-    # Intra-location iperf/hping
-    jobs = []
-    for key1 in regions:
-        jobs.append((regions[key1][0], regions[key1][1], env,))
+def run(env):
+    """ Run the mesh benchmark.
+    
+    Three different categories of experiments
 
-    pool = ThreadPool(len(env.locations()))
-    pool.map(experiment, jobs)
+    1) Intra data-center pairwise expeirments
+    2) Inter data-center pairwise experiments
+    3) Single VM experiments
 
+    """
+    regions = {}
+
+    inter_dc_experiments = ['iperf', 'hping']
+    intra_dc_experiments = ['iperf_vnet']
+    single_dc_experiments = ['fio']
+
+    prepare(env)
+    regions = categorize(env)
+
+    single_dc(regions, env, single_dc_experiments)
+    intra_dc(regions, env, intra_dc_experiments)
+    inter_dc(regions, env, inter_dc_experiments)

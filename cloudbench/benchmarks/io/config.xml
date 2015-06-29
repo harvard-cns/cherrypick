@@ -1,0 +1,26 @@
+<config>
+    <locations>
+        <location name='east-us' location='config:east'/>
+    </locations>
+
+    <virtual-machines>
+        <virtual-machine name='vm-east' image='config:ubuntu' type='config:size' location='east-us'/>
+    </virtual-machines>
+
+    <azure>
+        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='size'   value='Small' />
+        <config name='east'   value='East US' />
+
+        <locations>
+            <add-values name='east-us' storage-type='LRS' /> 
+        </locations>
+    </azure>
+
+    <aws>
+        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='size'   value='Small' />
+        <config name='west'   value='West US' />
+        <config name='east'   value='East US' />
+    </aws>
+</config>

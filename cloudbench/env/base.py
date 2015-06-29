@@ -8,7 +8,14 @@ import time
 import os
 
 class Benchmark(object):
+    """Wraps the benchmark parameters"""
     def __init__(self, name, directory, env):
+        """Initialize the benchmark object
+
+        name -- name of the benchmark that will get executed
+        directory -- directory to look for the benchmark and also save the results.
+        env -- environment of the execution, e.g., the virtual machines, etc.
+        """
         self._config = None
         self._env = env
         self._name = name

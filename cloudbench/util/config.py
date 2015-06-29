@@ -3,7 +3,7 @@ import sys
 
 if 'AZURE_STORAGE_KEY' not in os.environ or 'AZURE_STORAGE_NAME' not in os.environ:
     print >> sys.stderr, "You need to define AZURE_STORAGE_KEY and AZURE_STORAGE_NAME environment variables."
-    exit()
+    #exit()
 
 
 class Config(object):
