@@ -11,3 +11,6 @@ tools/coremark_v1.0.tgz
 # Cloud storage files for benchmarks
 azure.json
 aws.json
+
+# Coverage test
+.coverage

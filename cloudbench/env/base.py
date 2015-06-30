@@ -3,6 +3,8 @@ from cloudbench.env.clouds import AzureCloud, AwsCloud
 from cloudbench.storage import AzureStorage, FileStorage, JsonStorage
 from cloudbench.util import parallel
 
+from threading import RLock
+
 import threading
 import time
 import os
@@ -38,6 +40,7 @@ class Benchmark(object):
         """ Return the configuration """
         if self._config:
             return self._config
+
         if '.xml' in self._file:
             self._config = EnvXmlConfig(self._file, self.env.cloud_name, self.env)
             self._config.parse()
@@ -117,7 +120,9 @@ class Env(object):
     def __getattr__(self, name):
         """ Delegates methods that are not defined to the manager """
 
-        if name.startswith('create') or name.startswith('delete'):
+        if name.startswith('create') or name.startswith('delete') or \
+                name.startswith('stopped') or name.startswith('stop') or \
+                name.startswith('started') or name.startswith('start'):
             if hasattr(self.manager, name):
                 return getattr(self.manager, name)
 
@@ -156,37 +161,53 @@ class Env(object):
         while everything:
             to_remove = set()
             to_execute = set()
-            for ent in everything:
-                if satisfied(ent):
-                    if not check(ent):
-                        to_execute.add(ent)
-                    else:
-                        to_remove.add(ent)
+            lock = RLock()
 
+            def satisfy(x):
+                if satisfied(x):
+                    if not check(x):
+                        with lock:
+                            to_execute.add(x)
+                    else:
+                        with lock:
+                            to_remove.add(x)
+
+            print "Started checking satisfactions"
+            parallel(satisfy, everything)
+            print "Finished checking satisfactions"
             parallel(lambda x: execute(x), to_execute)
             to_remove = to_remove.union(set(filter(lambda x: check(x), to_execute)))
             everything = everything - to_remove
 
+    def call_if_exists(self, name):
+        def func(x):
+            if not hasattr(x, name):
+                return True
+            if not callable(getattr(x, name)):
+                return True
+            return getattr(x, name)()
+        return func
+
     def setup(self):
         """ Setup the VMs """
-        self.traverse_dag(lambda x: x.created(),
+        self.traverse_dag(self.call_if_exists('created'), 
                           lambda x: x.create(),
                           'dependencies')
 
     def teardown(self):
         """ Delete everything """
-        self.traverse_dag(lambda x: x.deleted(),
+        self.traverse_dag(self.call_if_exists('deleted'),
                           lambda x: x.delete(),
                           'dependents')
 
     def start(self):
         """ Start the topology in parallel """
-        self.traverse_dag(lambda x: x.started(),
+        self.traverse_dag(self.call_if_exists('started'),
                           lambda x: x.start(),
                           'dependencies')
 
     def stop(self):
         """ Stop the topology in parallel """
-        self.traverse_dag(lambda x: x.stopped(),
+        self.traverse_dag(self.call_if_exists('stopped'),
                           lambda x: x.stop(),
                           'dependents')

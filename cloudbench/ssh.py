@@ -175,7 +175,7 @@ outputs are also logged and can be accessed for the purpose of
 benchmark: preparing the VM, execution of benchmark, and tearing down
 the VM
 """
-class SSH:
+class Ssh:
     def __init__(self, vm, connect_string, wait_up=True):
         self._commands = []
         self._connect_string = connect_string

@@ -8,10 +8,26 @@ from .base import Cloud
 
 from threading import RLock
 
+import time
+
 class AzureCloud(Cloud):
     def __init__(self, *args, **kwargs):
         super(AzureCloud, self).__init__(*args, **kwargs)
         self.vnet_lock = RLock()
+        self.pace_lock = RLock()
+        self.pace_timer = 300
+
+    def execute(self, command, obj={}):
+        ret = super(AzureCloud, self).execute(command, obj)
+
+        # If we are too fast, backoff for 5 minutes before continuing again
+        if 'Too many requests received' in obj['stderr']:
+            print "Sleeping for 5 minutes: %s, %s, %s" % (command, obj['stderr'], obj['stdout'])
+            time.sleep(self.pace_timer)
+            return self.execute(command, obj)
+
+        return ret
+
 
     def start_virtual_machine(self, vm):
         """ Start a virtual machine """
@@ -23,7 +39,24 @@ class AzureCloud(Cloud):
         cmd = ['azure', 'vm', 'shutdown', self.unique(vm.name)]
         return self.execute(cmd)
 
-    def address_vm(self, vm):
+    def status_virtual_machine(self, vm):
+        cmd = ['azure', 'vm', 'show', self.unique(vm.name)]
+        
+        output = {}
+        self.execute(cmd, output)
+        if 'ReadyRole' in output['stdout']:
+            return True
+        if 'Stopped' in output['stdout']:
+            return False
+        return None
+
+    def exists_virtual_machine(self, vm):
+        cmd = ['azure', 'vm', 'show', self.unique(vm.name)]
+        output = {}
+        self.execute(cmd, output)
+        return 'No VMs found' in output['stdout']
+
+    def address_virtual_machine(self, vm):
         """ Returns the address of a vm """
         # TODO: Change the name to address_virtual_machine
         return self.unique(vm.name) + ".cloudapp.net"

@@ -33,13 +33,6 @@ class Entity(type):
         if '__init__' in attributes:
             __init__ = attributes['__init__']
 
-        def if_undefined(attributes, name, func=None):
-            def true(this):
-                return True
-            func = func or true
-            if name not in attributes:
-                attributes[name] = true
-
         variables = {}
         attrs = dict(attributes)
 
@@ -47,29 +40,10 @@ class Entity(type):
         attributes['dependencies'] = set()
         attributes['dependents'] = set()
 
-        # Add start and stop functions
-        if_undefined(attributes, 'start')
-        if_undefined(attributes, 'started')
-        if_undefined(attributes, 'stop')
-        if_undefined(attributes, 'stopped')
-
         # Augment the class with new properties
         for key, val in attrs.iteritems():
             if isinstance(val, Relation):
                 variables.update(val.augment(attributes, key))
-
-        def variable(self, obj):
-            klass = inflection.underscore(obj.__class__.__name__)
-            if klass in variables:
-                return '_' + klass
-            klass = inflection.pluralize(klass)
-            if klass in variables:
-                return '_' + klass
-
-            raise AttributeError("Unable to find %s in %s" % (klass,
-                self))
-
-        attributes['_variable'] = variable
 
         def initialize(self, *args, **kwargs):
             for key, val in variables.iteritems():
@@ -157,7 +131,7 @@ class EntityModel(object):
         if name in self.config:
             return self.config[name]
 
-        return None
+        raise AttributeError(name)
 
     def __str__(self):
         return self.name
