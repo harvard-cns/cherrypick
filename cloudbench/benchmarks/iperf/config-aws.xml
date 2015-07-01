@@ -1,0 +1,22 @@
+<config>
+    <aws>
+        <!-- Used to put VMs together -->
+        <groups>
+            <group name='g1' location='West US' storage-type='LRS' />
+            <group name='g2' location='East US' storage-type='LRS' />
+        </groups>
+
+        <virtual-machines>
+            <virtual-machine name='vm1' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='Small'  group='g1'>
+                <endpoint name='iperf' protocol='tcp' public-port='5001' private-port='5001' />
+            </virtual-machine>
+             <virtual-machine name='vm2' image='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' type='Small' group='g2' />
+        </virtual-machines>
+
+        <virtual-networks>
+        </virtual-networks>
+
+        <storages>
+        </storages>
+    </aws>
+</config>
