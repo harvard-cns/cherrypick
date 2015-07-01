@@ -6,6 +6,7 @@ def parallel(action, lst):
     for item in lst:
         thread = threading.Thread(target=action, args=(item,))
         threads.append(thread)
+        thread.daemon = True
         thread.start()
 
     for thread in threads:

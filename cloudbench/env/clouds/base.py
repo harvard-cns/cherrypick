@@ -8,7 +8,7 @@ class Cloud(object):
     def __init__(self, env):
         self._env = env
 
-    def execute(self, command):
+    def execute(self, command, obj={}):
         Debug.cmd << (' '.join(filter(None, command))) << "\n"
         if self.env.is_test():
             return True
@@ -24,7 +24,10 @@ class Cloud(object):
         if outdata:
             Debug.info << outdata << "\n"
 
-        return (p.wait() == 0)
+        obj['stdout'] = outdata
+        obj['stderr'] = errdata
+
+        return (p.returncode == 0)
 
     @property
     def env(self):
@@ -35,11 +38,14 @@ class Cloud(object):
         if name is None:
             return None
 
-        return 'cb' + self.env.benchmark_name() + str(name)
-
+        return 'cb' + self.env.benchmark.name + str(name)
 
     def if_available(self, option, value):
         if value:
             return [option,'"' + str(value) + '"']
         return []
 
+
+    @property
+    def data(self):
+        return self.env.benchmark.data

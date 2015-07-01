@@ -9,6 +9,19 @@ import sys
 
 BENCHMARK_PATH='../cloudbench/benchmarks/'
 
+def run_with_timeout(func, args, timeout=5*60):
+    proc = multiprocessing.Process(target=func, args=args)
+    proc.daemon = True
+    proc.start()
+    proc.join(timeout)
+
+    if proc.is_alive():
+        print "Timed out ... killing the process"
+        proc.terminate()
+        return False
+
+    return True
+
 def run_benchmark_with_timeout(benchmark, env, timeout=5*60):
     # Each benchmark has a timeout to finish, this timeout
     # is either specified in the file or set to a default value
@@ -22,15 +35,7 @@ def run_benchmark_with_timeout(benchmark, env, timeout=5*60):
         except Exception, err:
             print(traceback.format_exc())
 
-    proc = multiprocessing.Process(target=run, args=(benchmark, env))
-    proc.start()
-    proc.join(timeout)
-
-    if proc.is_alive():
-        print "Timed out ... killing the process"
-        proc.terminate()
-
-    return timeout
+    return run_with_timeout(run, (benchmark, env), timeout)
 
 
 def main():
@@ -97,7 +102,7 @@ def main():
     if args.start:
         env.start()
 
-    if not args.no_execute:
+    if not args.no_execute and not args.test:
         run_benchmark_with_timeout(mod, env)
 
     if args.stop:

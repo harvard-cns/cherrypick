@@ -2,44 +2,17 @@ import inflection
 
 from .entity_model import EntityModel, Entity
 from .relation import *
+from .behavior import *
 
 from cloudbench import constants
-from cloudbench.ssh import SSH
 
-class VirtualMachine(EntityModel):
-    location        = depends_on_one('Location')
+from threading import RLock
+
+class VirtualMachine(SecureShell, Preemptable, EntityModel):
+    location = depends_on_one('Location')
     virtual_network = depends_on_one('VirtualNetwork')
-    log_storages    = depends_on_many('LogStorage')
+    log_storages = depends_on_many('LogStorage')
     security_groups = has_many('SecurityGroup')
-
-    def __init__(self, *args, **kwargs):
-        super(VirtualMachine, self).__init__(*args, **kwargs)
-        self._ssh = None
-        self._started = False
-        self._stopped = False
-
-    def start(self):
-        """ Ask the cloud factory for a boot up """
-        self.factory.start_virtual_machine(self)
-        self._started = True
-        self._stopped = False
-
-    def stop(self):
-        """ Ask the cloud factory for a shutdown """
-        self.factory.stop_virtual_machine(self)
-        self._started = False
-        self._stopped = True
-
-    def reset(self):
-        """ Ask the cloud factory for a reset """
-        self.stop()
-        self.start()
-
-    def started(self):
-        return self._started
-
-    def stopped(self):
-        return self._stopped
 
     @property
     def username(self):
@@ -52,22 +25,7 @@ class VirtualMachine(EntityModel):
     @property
     def url(self):
         """ Returns the URL to this vm """
-        return self.factory.address_vm(self)
-
-    def ssh(self, new=False):
-        """ Return a SSH tunnel.
-
-        If the new param is set, create a new SSH instance for every
-        call to this function.
-        """
-        if new:
-            return SSH(self, "".join([self.username, '@', self.url]))
-
-        if self._ssh:
-            return self._ssh
-
-        self._ssh = SSH(self, "".join([self.username, '@', self.url]))
-        return self._ssh
+        return self.factory.address_virtual_machine(self)
 
 class VirtualNetwork(EntityModel):
     virtual_machines = has_many('VirtualMachine')

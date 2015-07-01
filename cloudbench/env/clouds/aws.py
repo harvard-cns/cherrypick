@@ -15,7 +15,7 @@ class AwsCloud(Cloud):
         print 'Stopping up (%s)' % vm
         return True
 
-    def address_vm(self, vm):
+    def address_virtual_machine(self, vm):
         return self._env.namify(vm.name) + ".cloudapp.net"
 
     def hashify_22(self, name):
