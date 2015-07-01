@@ -182,6 +182,9 @@ class Ssh:
         self._vm  = vm
         self._ip = None
 
+        if wait_up:
+            WaitUp().start(self)
+
     def vm(self):
         return self._vm
 
