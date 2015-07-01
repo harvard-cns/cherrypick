@@ -1,5 +1,6 @@
 from cloudbench.env.config.xml_config import EnvXmlConfig
 from cloudbench.env.clouds import AzureCloud, AwsCloud
+from cloudbench.executor import Executor
 from cloudbench.storage import AzureStorage, FileStorage, JsonStorage
 from cloudbench.util import parallel
 
@@ -26,6 +27,7 @@ class Benchmark(object):
 
         self._storage_path = os.path.join(directory, env.cloud_name + '.json')
         self._storage = None
+        self._executor = None
 
     @property
     def name(self):
@@ -54,6 +56,14 @@ class Benchmark(object):
 
         self._storage = JsonStorage(self._env, self._storage_path)
         return self._storage
+
+    @property
+    def executor(self):
+        if self._executor:
+            return self._executor
+
+        self._executor = Executor(self.env)
+        return self._executor
 
 class Env(object):
     def __init__(self, cloud, f, benchmark, storage):
@@ -172,9 +182,7 @@ class Env(object):
                         with lock:
                             to_remove.add(x)
 
-            print "Started checking satisfactions"
             parallel(satisfy, everything)
-            print "Finished checking satisfactions"
             parallel(lambda x: execute(x), to_execute)
             to_remove = to_remove.union(set(filter(lambda x: check(x), to_execute)))
             everything = everything - to_remove

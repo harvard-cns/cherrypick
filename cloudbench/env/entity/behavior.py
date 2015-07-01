@@ -8,15 +8,15 @@ class SecureShell(object):
         super(SecureShell, self).__init__(*args, **kwargs)
         self._ssh = None
 
-    def ssh(self, new=False):
+    def ssh(self, new=False, waitUp=True):
         """ Return a SSH tunnel."""
         if new:
-            return Ssh(self, "".join([self.username, '@', self.url]))
+            return Ssh(self, "".join([self.username, '@', self.url]), waitUp)
 
         if self._ssh:
             return self._ssh
 
-        self._ssh = Ssh(self, "".join([self.username, '@', self.url]))
+        self._ssh = Ssh(self, "".join([self.username, '@', self.url]), waitUp)
         return self._ssh
 
 class Preemptable(object):

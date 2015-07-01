@@ -18,12 +18,12 @@ class TestSecureShell(unittest.TestCase):
         self.vm = self.__class__.VirtualMachine()
 
     def test_ssh(self):
-        self.assertIsInstance(self.vm.ssh(), Ssh)
-        self.assertEqual(self.vm.ssh(), self.vm.ssh())
+        self.assertIsInstance(self.vm.ssh(False, False), Ssh)
+        self.assertEqual(self.vm.ssh(False, False), self.vm.ssh(False, False))
 
     def test_new_ssh(self):
-        self.assertNotEqual(self.vm.ssh(), self.vm.ssh(True))
-        self.assertNotEqual(self.vm.ssh(True), self.vm.ssh(True))
+        self.assertNotEqual(self.vm.ssh(False, False), self.vm.ssh(True, False))
+        self.assertNotEqual(self.vm.ssh(True, False), self.vm.ssh(True, False))
 
 class TestPreemptable(unittest.TestCase):
     """ Test a preemptable object behavior """

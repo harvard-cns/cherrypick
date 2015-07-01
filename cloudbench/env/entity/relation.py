@@ -94,7 +94,6 @@ class Relation(object):
 
         def get(this):
             name = inflection.dasherize(inflection.underscore(this.__class__.__name__))
-            print _key, _get_method, this.config, self.klass
             if _key not in this.config:
                 return {}
 

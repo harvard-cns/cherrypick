@@ -110,12 +110,17 @@ def fio(vm, env):
 def bonnie(vm):
     return vm
 
+def fio_test(vms, env):
+    vm = vms[0]
+    install(vm)
+    results = fio(vm, env)
+    print results
+
+
 def run(env):
     vm1 = env.vm('vm-east')
 
-    install(vm1)
-
-    results = fio(vm1, env)
-    print results
-    #results = bonnie(vm1)
+    env.benchmark.executor([vm1], fio_test)
+    env.benchmark.executor.run()
+    env.benchmark.executor.stop()
 
