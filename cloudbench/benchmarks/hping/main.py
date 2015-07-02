@@ -26,7 +26,7 @@ def _hping_ip(vm1, vm2, vm2_address):
         warmup = 'sudo hping3 -c 5 -S -I eth0 -p 22 ' + vm2_address
 
         # Run a warmup
-        for _ in range(3):
+        for _ in range(1):
             vm1_ssh_warmup << WaitUntilFinished(warmup)
 
         vm1_ssh_warmup.terminate()

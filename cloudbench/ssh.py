@@ -93,10 +93,10 @@ class Command(object):
     def process(self):
         return self._process
 
-    def wait(self):
+    def wait(self, timeout=None):
         """ Wait until the command has finished executing or an error
         occured in the thread."""
-        self._thread.join()
+        self._thread.join(timeout)
         return self
 
     def terminate(self):
@@ -145,26 +145,24 @@ class WaitForSeconds(Command):
 
 
 class WaitUp(Command):
-    def __init__(self, cmd='exit'):
+    def __init__(self, cmd='exit', timeout=120):
         super(WaitUp, self).__init__(cmd)
-        self._failures = 0;
-        self._failure_threshold = 10;
+        self._timeout = timeout
 
     def start(self, ssh):
         Debug.info << "Waiting for %s " % ssh.connect_string
+        start = time.time()
         while True:
             super(WaitUp, self).start(ssh)
-            self.wait()
+            self.wait(self._timeout)
 
-            self._failures += 1
+            if (time.time() - start) >= self._timeout:
+                return False
 
-            if self._failures == self._failure_threshold:
-                print "VM is stale ..."
-                
             if self.process().poll() == 0:
                 Debug.info << ("\n")
                 Debug.info  << "%s is up.\n" % ssh.connect_string
-                return
+                return True
             Debug.info << ('.')
             time.sleep(1)
 
@@ -176,14 +174,11 @@ benchmark: preparing the VM, execution of benchmark, and tearing down
 the VM
 """
 class Ssh:
-    def __init__(self, vm, connect_string, wait_up=True):
+    def __init__(self, vm, connect_string):
         self._commands = []
         self._connect_string = connect_string
         self._vm  = vm
         self._ip = None
-
-        if wait_up:
-            WaitUp().start(self)
 
     def vm(self):
         return self._vm

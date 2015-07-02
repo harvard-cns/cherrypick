@@ -1,13 +1,26 @@
 from cloudbench.util import parallel
+from cloudbench.env.entity.behavior import Preemptable
 
 from threading import RLock, Thread
 import time
 
+glob_lock = RLock()
+glob_job = {}
+
 class Job(object):
-    def __init__(self, env, entities, function):
+    count = 0
+    def __init__(self, env, entities, function, name=''):
+        self.count = Job.count
+        with glob_lock:
+            Job.count += 1
         self._entities = entities
         self._function = function
+        self._name = name
         self._env = env
+
+
+    def __repr__(self):
+        return str(self.count)
 
     @property
     def entities(self):
@@ -18,11 +31,11 @@ class Job(object):
         return self._env
 
     def run(self, callback=None):
-        def run(self, callback):
-            self._function(self._entities, self.env)
+        def execute(job, callback):
+            self._function(job._entities, job.env)
             if callback:
-                callback(self)
-        th = Thread(target=run, args=(self, callback))
+                callback(job)
+        th = Thread(target=execute, args=(self, callback))
         th.daemon = True
         th.start()
 
@@ -42,6 +55,7 @@ class Executor(object):
         self._dead_entities = set()
 
         self._active_job_lock = RLock()
+        self._remaining_job_lock = RLock()
 
 
     @property
@@ -59,17 +73,21 @@ class Executor(object):
     def runnable_jobs(self):
         """ Returns the set of jobs that can be run """
         # Returns the set of runnable jobs
-        return self._remaining_jobs - self.jobs_of(self.active_entities())
+        with self._remaining_job_lock:
+            return self._remaining_jobs - self.jobs_of(self.active_entities())
 
     def next_runnable_job(self):
-        jobs = self.runnable_jobs()
-        if not jobs:
-            return None
-        return jobs.pop()
+        with self._remaining_job_lock:
+            jobs = self.runnable_jobs()
+            if not jobs:
+                return None
+            job = jobs.pop()
+            self._remaining_jobs.remove(job)
+            return job
 
-    def submit(self, entities, function):
+    def submit(self, entities, function, name=''):
         """ Submit a job for execution """
-        job = Job(self._env, entities, function)
+        job = Job(self._env, entities, function, name)
 
         # Add the entities to the set of total entities
         self._entities = self._entities.union(set(entities))
@@ -80,7 +98,7 @@ class Executor(object):
         for entity in entities:
             if entity not in self._entity_jobs:
                 self._entity_jobs[entity] = set()
-            self._entity_jobs[entity] = self._entity_jobs[entity].union(set([job]))
+            self._entity_jobs[entity].add(job)
 
         return job
 
@@ -88,6 +106,8 @@ class Executor(object):
     def add_dead_entities(self, entities):
         """ Add dead entities """
         self._dead_entities = self._dead_entities.union(entities)
+        print map(lambda x: x.name, entities), len(self.jobs_of(self._dead_entities))
+        print "\n".join(map(lambda x: x.name, self._dead_entities))
 
         # Remove the rest of the jobs that can't be run
         self._remaining_jobs = self._remaining_jobs - self.jobs_of(entities)
@@ -98,19 +118,15 @@ class Executor(object):
         lock = RLock()
 
         def entity_up(entity):
-            if (not hasattr(entity, 'started')) or entity.started():
+            if not isinstance(entity, Preemptable):
                 return True
 
             entity.start()
+            entity.wait(180)
 
-            # Wait 5 times for the instance to come up
-            for i in xrange(7):
-                if entity.started():
-                    return True
-                time.sleep(15)
-            
-            with lock:
-                dead_entities.add(entity)
+            if entity.stale:
+                with lock:
+                    dead_entities.add(entity)
 
         parallel(entity_up, entities)
 
@@ -135,22 +151,31 @@ class Executor(object):
 
     def mark_job_as_inactive(self, job):
         with self._active_job_lock:
-            self._active_jobs.remove(job)
+            self._active_jobs.discard(job)
 
+    def add_remaining(self, job):
+        with self._remaining_job_lock:
+            self._remaining_jobs.add(job)
 
     def run_next_job(self):
         """ Run next available job """
         job = self.next_runnable_job()
-
         if not job:
             return False
 
-        if self.start_entities(job.entities):
+        def run_job(job):
             self.mark_job_as_active(job)
-            self._remaining_jobs.remove(job)
-            return job.run(callback=self.mark_job_as_inactive)
+            if not self.start_entities(job.entities):
+                self.mark_job_as_inactive(job)
+                return True
 
-        return True
+            th = job.run(callback=self.mark_job_as_inactive)
+            th.join()
+
+        th = Thread(target=run_job, args=(job,))
+        th.daemon = True
+        th.start()
+        return th
 
     def finished(self):
         return len(self._remaining_jobs) == 0
@@ -162,8 +187,12 @@ class Executor(object):
             return True
         parallel(stop_entity, self._entities)
 
-    def __call__(self, entities, function):
-        self.submit(entities, function)
+    def __call__(self, entities, function, name=''):
+        self.submit(entities, function, name)
+
+    def save_dead_entities(self):
+        for entity in self._dead_entities:
+            self.env.storage().save({'stale': entity.name}, partition='dead')
 
     def run(self):
         """ Run all the jobs """
@@ -172,11 +201,6 @@ class Executor(object):
             th = self.run_next_job()
             if isinstance(th, Thread):
                 threads.add(th)
-                continue
-
-            # If running failed, but we should continue snooping for
-            # more jobs
-            if th == True:
                 continue
 
             # If th is none, that means there are no jobs for us to
@@ -193,3 +217,6 @@ class Executor(object):
 
         for thread in threads:
             thread.join()
+
+        # Save the dead entities
+        self.save_dead_entities()

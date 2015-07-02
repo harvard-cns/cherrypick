@@ -9,24 +9,49 @@ from cloudbench.benchmarks.io.main import fio
 import re
 import traceback, sys
 
+from threading import RLock
+
 # Timeout of 50 minutes
-TIMEOUT=60*60
+TIMEOUT=70*60
+
+
+FILE = open('results.json', 'a+')
+FILE_LOCK = RLock()
 
 def unixify(name):
     return name.lower().replace(' ', '_')
 
 def save(env, results, benchmark, server, client):
+    with FILE_LOCK:
+        print "Writing output: %s" % server
+        print >> FILE, "%s" % results
+        FILE.flush()
     env.storage().save(results, partition=benchmark, key=(unixify(server) + '_' + unixify(client)))
 
+def install(vm):
+    """ Install the required applications for the VM """
+
+    if not hasattr(vm, '_install'):
+        vm._install = True
+        vm.ssh() << WaitUntilFinished("sudo apt-get install hping3 -y")
+        vm.ssh() << WaitUntilFinished("sudo apt-get install iperf -y")
+        vm.ssh() << WaitUntilFinished("sudo apt-get install fio -y")
 
 def inter_experiment(params):
     """ Run inter dc experiments """
     vm1, vm2, experiments, env = params
     try:
+
         # Save iperf results
         for exp in experiments:
-            output = globals()[exp](vm1, vm2, env)
-            save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
+            function = globals()[exp]
+            def execute(vms, env):
+                for vm in vms:
+                    install(vm)
+                vm1, vm2 = vms
+                output = function(vm1, vm2, env)
+                save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
+            env.benchmark.executor([vm1, vm2], execute, exp)
     except:
         print "Exception in user code:"
         print '-' * 60
@@ -40,8 +65,14 @@ def intra_experiment(params):
 
     try:
         for exp in experiments:
-            output = globals()[exp](vm1, vm2, env)
-            save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
+            function = globals()[exp]
+            def execute(vms, env):
+                for vm in vms:
+                    install(vm)
+                vm1, vm2 = vms
+                output = function(vm1, vm2, env)
+                save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
+            env.benchmark.executor([vm1, vm2], execute, exp)
     except:
         print "Exception in user code:"
         print '-' * 60
@@ -54,8 +85,14 @@ def single_experiment(params):
     vm, experiments, env = params
     try:
         for exp in experiments:
-            output = globals()[exp](vm, env)
-            save(env, output, exp+'mesh', vm.location().location, '')
+            function = globals()[exp]
+            def execute(vms, env):
+                for vm in vms:
+                    install(vm)
+                vm1 = vms[0]
+                output = function(vm1, env)
+                save(env, output, exp+'mesh', vm1.location().location, vm1.location().location)
+            env.benchmark.executor([vm], execute, exp)
     except:
         print "Exception in user code:"
         print '-' * 60
@@ -75,26 +112,14 @@ def categorize(env):
 
     return regions
 
-def prepare(env):
-    """ Prepare the environment, e.g., install any required
-    applications, etc. """
-    def install(vm):
-        """ Install the required applications for the VM """
-        vm.ssh() << WaitUntilFinished("sudo apt-get install hping3 -y")
-        vm.ssh() << WaitUntilFinished("sudo apt-get install iperf -y")
-        vm.ssh() << WaitUntilFinished("sudo apt-get install fio -y")
-
-    pool = ThreadPool(len(env.virtual_machines().values()))
-    pool.map(install, env.virtual_machines().values())
-
 def single_dc(regions, env, experiments):
     """ Run the intra-dc experiments """
     jobs = []
     for key1 in regions:
-        jobs.append((regions[key1][0], experiments, env,))
+        jobs.append((regions[key1][1], experiments, env,))
 
-    pool = ThreadPool(len(env.locations()))
-    pool.map(single_experiment, jobs)
+    for job in jobs:
+        single_experiment(job)
 
 def intra_dc(regions, env, experiments):
     """ Run the intra-dc experiments """
@@ -102,8 +127,8 @@ def intra_dc(regions, env, experiments):
     for key1 in regions:
         jobs.append((regions[key1][0], regions[key1][1], experiments, env,))
 
-    pool = ThreadPool(len(env.locations()))
-    pool.map(intra_experiment, jobs)
+    for job in jobs:
+        intra_experiment(job)
 
 def inter_dc(regions, env, experiments):
     """ Run inter-dc experiments between all pairs of VMs
@@ -121,8 +146,9 @@ def inter_dc(regions, env, experiments):
             reg_dst = region_names[(start + idx) % len(region_names)]
             jobs.append((regions[reg_src][0], regions[reg_dst][1],
                 experiments, env,))
-        pool = ThreadPool(len(env.locations())-1)
-        pool.map(inter_experiment, jobs)
+
+        for job in jobs:
+            inter_experiment(job)
 
 
 def run(env):
@@ -141,9 +167,12 @@ def run(env):
     intra_dc_experiments = ['iperf_vnet']
     single_dc_experiments = ['fio']
 
-    prepare(env)
     regions = categorize(env)
 
+    #prepare(env)
     single_dc(regions, env, single_dc_experiments)
     intra_dc(regions, env, intra_dc_experiments)
     inter_dc(regions, env, inter_dc_experiments)
+
+    env.benchmark.executor.run()
+    #env.benchmark.executor.stop()

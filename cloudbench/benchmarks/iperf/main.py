@@ -15,7 +15,7 @@ def _iperf(vm1, vm2, vm1_address):
         vm1_ssh << WaitForSeconds('iperf -s -y C', 3)
 
         Debug << "Warming up ..."
-        for _ in range(3):
+        for _ in range(1):
             vm2_ssh_warmup << WaitUntilFinished('iperf -y C -c ' + vm1_address)
         vm2_ssh_warmup.terminate()
 

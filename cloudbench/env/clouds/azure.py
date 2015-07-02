@@ -2,7 +2,7 @@ import subprocess
 import base64
 
 from cloudbench import constants
-from cloudbench.util import Debug, parallel
+from cloudbench.util import Debug, parallel, rate_limit
 
 from .base import Cloud
 
@@ -17,12 +17,16 @@ class AzureCloud(Cloud):
         self.pace_lock = RLock()
         self.pace_timer = 300
 
+    # Is only allowed to be called once every 5 seconds
+    # TODO: Why is there a limitation like this on Azure ... 5 seconds
+    # wait per request is too much ...
+    #@rate_limit(0.2)
     def execute(self, command, obj={}):
         ret = super(AzureCloud, self).execute(command, obj)
 
         # If we are too fast, backoff for 5 minutes before continuing again
         if 'Too many requests received' in obj['stderr']:
-            print "Sleeping for 5 minutes: %s, %s, %s" % (command, obj['stderr'], obj['stdout'])
+            print "Sleeping for 5 minutes:\n > %s, %s, %s" % (command, obj['stderr'], obj['stdout'])
             time.sleep(self.pace_timer)
             return self.execute(command, obj)
 
@@ -32,23 +36,27 @@ class AzureCloud(Cloud):
     def start_virtual_machine(self, vm):
         """ Start a virtual machine """
         cmd = ['azure', 'vm', 'start', self.unique(vm.name)]
+        vm._started = True
         return self.execute(cmd)
 
     def stop_virtual_machine(self, vm):
         """ Stop a virtual machine """
         cmd = ['azure', 'vm', 'shutdown', self.unique(vm.name)]
+        vm._started = False
         return self.execute(cmd)
 
     def status_virtual_machine(self, vm):
-        cmd = ['azure', 'vm', 'show', self.unique(vm.name)]
-        
-        output = {}
-        self.execute(cmd, output)
-        if 'ReadyRole' in output['stdout']:
-            return True
-        if 'Stopped' in output['stdout']:
-            return False
-        return None
+        return vm._started
+
+        # cmd = ['azure', 'vm', 'show', self.unique(vm.name)]
+        # 
+        # output = {}
+        # self.execute(cmd, output)
+        # if 'ReadyRole' in output['stdout']:
+        #     return True
+        # if 'Stopped' in output['stdout']:
+        #     return False
+        # return None
 
     def exists_virtual_machine(self, vm):
         cmd = ['azure', 'vm', 'show', self.unique(vm.name)]
@@ -110,7 +118,8 @@ class AzureCloud(Cloud):
         cmd += ['-e', '22', self.unique(vm.name), vm.image, 'cloudbench', '-P',
                 '-t', constants.DEFAULT_VM_PUBLIC_KEY]
 
-        return self.execute(cmd)
+        ret = self.execute(cmd)
+        return True
 
     def create_virtual_network(self, vnet):
         """ Create a virtual network """
@@ -121,14 +130,13 @@ class AzureCloud(Cloud):
         try:
             cmd = ['azure', 'network', 'vnet', 'create']
             cmd += self.if_available('-e', vnet.address_range)
-            #cmd += self.if_available('-l', vnet.location())
             cmd += self.if_available('-a', self.unique(vnet.location()))
             cmd += [self.unique(vnet.name)]
 
             ret = self.execute(cmd)
         finally:
             self.vnet_lock.release()
-        return ret
+        return True
 
     def delete_security_group(self, _):
         """ Delete an azure 'security-group' a.k.a. an endpoint.

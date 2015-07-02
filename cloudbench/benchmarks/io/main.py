@@ -6,7 +6,7 @@ import re
 
 TIMEOUT=300
 
-FIO_FILENAME='/dev/sda'
+FIO_FILENAME='/home/%s/fio.file'
 
 def install(vm):
     vm.ssh() << WaitUntilFinished('sudo apt-get install fio -y') \
@@ -74,19 +74,21 @@ def parse_fio(result):
 
 def _fio_r100_w0(vm):
     vm_fio = vm.ssh(True)
+    vm_fio << WaitUntilFinished('sudo killall fio')
     vm_fio << WaitUntilFinished('sudo fio --filename={0} --direct=1 \
 --rw=randrw --refill_buffers --norandommap --randrepeat=0 --ioengine=libaio \
---bs=4k --rwmixread=100 --iodepth=16 --numjobs=16 --runtime=60 \
---group_reporting --name=4ktest'.format(FIO_FILENAME))
+--bs=4k --rwmixread=100 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
+--group_reporting --name=4ktest'.format(FIO_FILENAME % vm.username, 200*1024*1024))
     vm_fio.terminate()
     return parse_fio(vm_fio.read())
 
 def _fio_r70_w30(vm):
     vm_fio = vm.ssh(True)
+    vm_fio << WaitUntilFinished('sudo killall fio')
     vm_fio << WaitUntilFinished('sudo fio --filename={0} --direct=1 \
 --rw=randrw --refill_buffers --norandommap --randrepeat=0 --ioengine=libaio \
---bs=8k --rwmixread=70 --iodepth=16 --numjobs=16 --runtime=60 \
---group_reporting --name=8k7030test'.format(FIO_FILENAME))
+--bs=8k --rwmixread=70 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
+--group_reporting --name=8k7030test'.format(FIO_FILENAME % vm.username, 200*1024*1024))
     vm_fio.terminate()
     return parse_fio(vm_fio.read())
 
@@ -98,8 +100,7 @@ def fio(vm, env):
     if 'read' in t:
         output['r70'] = t['read']
     if 'write' in t:
-        output['r30'] = t['write']
-
+        output['w30'] = t['write']
     t = _fio_r100_w0(vm)
     if 'read' in t:
         output['r100'] = t['read']

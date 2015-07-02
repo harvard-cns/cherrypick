@@ -1,4 +1,5 @@
 import threading
+import time
 
 def parallel(action, lst):
     """ Run an action in parallel and wait for completion """
@@ -19,3 +20,20 @@ def entity_repr(entity, _type):
         ret += "   > %s: %s\n" % (key, val)
     return ret
 
+def rate_limit(speed):
+    interval = 1/float(speed)
+
+    def decorate(f):
+        last_time = [time.time()]
+        lock = [threading.RLock()]
+
+        def func(*args, **kwargs):
+            with lock[0]:
+                remaining = time.time() - (last_time[0] + interval)
+                if remaining < 0:
+                    time.sleep(-remaining)
+
+                last_time[0] = time.time()
+            return f(*args, **kwargs)
+        return func
+    return decorate

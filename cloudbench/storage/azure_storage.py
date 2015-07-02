@@ -2,6 +2,8 @@ from .base_storage import BaseStorage
 from azure.storage import TableService, Entity
 from cloudbench.util import Config, Debug
 
+import sys
+
 class AzureStorage(BaseStorage):
     def __init__(self, env):
         super(AzureStorage, self).__init__(env)
@@ -19,13 +21,13 @@ class AzureStorage(BaseStorage):
         self._ts.create_table(self.table_name())
 
     def table_name(self):
-        return self._env.benchmark.name
+        return self._env.benchmark.name + 'new'
 
     def save(self, dic, partition=None, key=''):
-        dic['RowKey'] = self.timestamp()
+        dic['RowKey'] = self.reverse_timestamp()
 
         if key:
-            dic['RowKey'] = self.timestamp() + '_' + key
+            dic['RowKey'] += '_' + key
 
         # Don't really need the partition key right now
         if partition is None:
@@ -33,4 +35,7 @@ class AzureStorage(BaseStorage):
         else:
             dic['PartitionKey'] = partition
 
-        self._ts.insert_entity(self.table_name(), dic)
+        try:
+            self._ts.insert_entity(self.table_name(), dic)
+        except:
+            print >> sys.stderr, "Error saving: %s" % dic

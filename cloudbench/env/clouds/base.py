@@ -1,8 +1,11 @@
-import subprocess
 import base64
+import fcntl
+import os
+import subprocess
 
 from cloudbench import constants
 from cloudbench.util import Debug
+
 
 class Cloud(object):
     def __init__(self, env):
@@ -13,9 +16,13 @@ class Cloud(object):
         if self.env.is_test():
             return True
 
+        def nonblock(x):
+            fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
         p = subprocess.Popen(' '.join(command), shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
+
         (outdata, errdata) = p.communicate()
 
         if errdata: 

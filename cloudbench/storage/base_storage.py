@@ -1,6 +1,8 @@
 import ntplib
 from time import ctime, time
 
+import sys
+
 class BaseStorage(object):
     def __init__(self, env):
         self._env    = env
@@ -14,6 +16,9 @@ class BaseStorage(object):
             self._delta = time() - float(resp)
 
         return str(int((time() - self._delta)*100)).zfill(14)
+
+    def reverse_timestamp(self):
+        return (sys.maxint - int(self.timestamp()))
 
     def save(self, dic):
         pass
