@@ -53,9 +53,8 @@ def iperf_vnet(vm1, vm2, env):
 
     return _iperf(vm1, vm2, vm1_address)
 
-def run(env):
-    vm1 = env.vm('vm-east')
-    vm2 = env.vm('vm-west')
+def exec_iperf(vms, env):
+    vm1, vm2 = vms
 
     Debug << "Installing iperf.\n"
     vm1.ssh() << WaitUntilFinished('sudo apt-get install iperf -y')
@@ -63,5 +62,10 @@ def run(env):
 
     print iperf(vm1, vm2, env)
 
-    vm1.terminate()
-    vm2.terminate()
+
+def run(env):
+    vm1 = env.vm('vm-east')
+    vm2 = env.vm('vm-west')
+
+    env.benchmark.executor([vm1, vm2], exec_iperf, 'iperf')
+    env.benchmark.executor.run()

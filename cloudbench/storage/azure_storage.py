@@ -24,10 +24,11 @@ class AzureStorage(BaseStorage):
         return self._env.benchmark.name + 'new'
 
     def save(self, dic, partition=None, key=''):
-        dic['RowKey'] = self.reverse_timestamp()
+        dic['RowKey'] = str(self.reverse_timestamp())
+        dic['Cloud'] = str(self._env.cloud_name)
 
         if key:
-            dic['RowKey'] += '_' + key
+            dic['RowKey'] = dic['RowKey'] + '_' + str(key)
 
         # Don't really need the partition key right now
         if partition is None:

@@ -6,4 +6,4 @@ eu-west-1,ami-47a23a30
 sa-east-1,ami-4d883350
 us-east-1,ami-d05e75b8
 us-west-1,ami-df6a8b9b
-us-west-2,ami-5189a661
+us-west-2,ami-01729c45

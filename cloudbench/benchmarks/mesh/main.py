@@ -14,18 +14,10 @@ from threading import RLock
 # Timeout of 50 minutes
 TIMEOUT=70*60
 
-
-FILE = open('results.json', 'a+')
-FILE_LOCK = RLock()
-
 def unixify(name):
     return name.lower().replace(' ', '_')
 
 def save(env, results, benchmark, server, client):
-    with FILE_LOCK:
-        print "Writing output: %s" % server
-        print >> FILE, "%s" % results
-        FILE.flush()
     env.storage().save(results, partition=benchmark, key=(unixify(server) + '_' + unixify(client)))
 
 def install(vm):
@@ -45,13 +37,15 @@ def inter_experiment(params):
         # Save iperf results
         for exp in experiments:
             function = globals()[exp]
-            def execute(vms, env):
-                for vm in vms:
-                    install(vm)
-                vm1, vm2 = vms
-                output = function(vm1, vm2, env)
-                save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
-            env.benchmark.executor([vm1, vm2], execute, exp)
+            def save_scope(func, exp):
+                def execute(vms, env):
+                    for vm in vms:
+                        install(vm)
+                    vm1, vm2 = vms
+                    output = func(vm1, vm2, env)
+                    save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
+                return execute
+            env.benchmark.executor([vm1, vm2], save_scope(function, exp), exp)
     except:
         print "Exception in user code:"
         print '-' * 60
@@ -66,13 +60,15 @@ def intra_experiment(params):
     try:
         for exp in experiments:
             function = globals()[exp]
-            def execute(vms, env):
-                for vm in vms:
-                    install(vm)
-                vm1, vm2 = vms
-                output = function(vm1, vm2, env)
-                save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
-            env.benchmark.executor([vm1, vm2], execute, exp)
+            def save_scope(func, exp):
+                def execute(vms, env):
+                    for vm in vms:
+                        install(vm)
+                    vm1, vm2 = vms
+                    output = func(vm1, vm2, env)
+                    save(env, output, exp+'mesh', vm1.location().location, vm2.location().location)
+                return execute
+            env.benchmark.executor([vm1, vm2], save_scope(function, exp), exp)
     except:
         print "Exception in user code:"
         print '-' * 60
@@ -86,13 +82,16 @@ def single_experiment(params):
     try:
         for exp in experiments:
             function = globals()[exp]
-            def execute(vms, env):
-                for vm in vms:
-                    install(vm)
-                vm1 = vms[0]
-                output = function(vm1, env)
-                save(env, output, exp+'mesh', vm1.location().location, vm1.location().location)
-            env.benchmark.executor([vm], execute, exp)
+
+            def save_scope(func, exp):
+                def execute(vms, env):
+                    for vm in vms:
+                        install(vm)
+                    vm1 = vms[0]
+                    output = function(vm1, env)
+                    save(env, output, exp+'mesh', vm1.location().location, vm1.location().location)
+                return execute
+            env.benchmark.executor([vm], save_scope(function, exp), exp)
     except:
         print "Exception in user code:"
         print '-' * 60
@@ -164,7 +163,7 @@ def run(env):
     regions = {}
 
     inter_dc_experiments = ['iperf', 'hping']
-    intra_dc_experiments = ['iperf_vnet']
+    intra_dc_experiments = ['iperf_vnet', 'hping', 'iperf']
     single_dc_experiments = ['fio']
 
     regions = categorize(env)

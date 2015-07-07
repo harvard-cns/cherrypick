@@ -5,16 +5,17 @@
     </locations>
 
     <virtual-machines>
-        <virtual-machine name='vm-west' image='config:ubuntu' type='config:size' location='west-us'/>
-        <virtual-machine name='vm-east' image='config:ubuntu' type='config:size' location='east-us'/>
+        <virtual-machine name='vm-west' image='config:ubuntu1' type='config:size' location='west-us'/>
+        <virtual-machine name='vm-east' image='config:ubuntu2' type='config:size' location='east-us'/>
     </virtual-machines>
 
     <security-groups>
-        <security-group name='sec-west' private-port='5001' public-port='5001' direction='bidirectional' virtual-machines='vm-west,vm-east' />
+        <security-group name='sec-west' private-port='5001' public-port='5001' direction='bidirectional' virtual-machines='vm-west,vm-east' protocol='tcp'/>
     </security-groups>
 
     <azure>
-        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='ubuntu1' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='ubuntu2' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
         <config name='size'   value='Small' />
         <config name='west'   value='West US' />
         <config name='east'   value='East US' />
@@ -23,16 +24,13 @@
             <add-values name='west-us' storage-type='LRS' /> 
             <add-values name='east-us' storage-type='LRS' /> 
         </locations>
-
-        <security-groups>
-            <add-values name='sec-west' protocol='tcp' />
-        </security-groups>
     </azure>
 
     <aws>
-        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
-        <config name='size'   value='Small' />
-        <config name='west'   value='West US' />
-        <config name='east'   value='East US' />
+        <config name='ubuntu1' value='ami-3d877079' />
+        <config name='ubuntu2' value='ami-27748b4c' />
+        <config name='size'   value='t2.micro' />
+        <config name='west'   value='us-west-1' />
+        <config name='east'   value='us-east-1' />
     </aws>
 </config>

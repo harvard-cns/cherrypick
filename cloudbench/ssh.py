@@ -51,11 +51,11 @@ class Command(object):
 
             return subprocess.Popen(shlex.split(cmd),
                     stdout=subprocess.PIPE,
-                    stderr=None)
+                    stderr=subprocess.PIPE)
 
         def monitor_process(p, queue):
             nonblock(p.stdout)
-            #nonblock(p.stderr)
+            nonblock(p.stderr)
 
             while (True):
                 read, _, _ = select.select([p.stdout], [], [], 1)
@@ -74,6 +74,7 @@ class Command(object):
                         r = p.stdout.read(4096)
                         if (r == ""):
                             p.stdout.close()
+                            p.stderr.close()
                             return True
                         queue.put(r)
                     except Exception as e:

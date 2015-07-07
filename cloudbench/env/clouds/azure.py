@@ -10,6 +10,12 @@ from threading import RLock
 
 import time
 
+def disable(func):
+    def func(*args, **kwargs):
+        return True
+
+    return func
+
 class AzureCloud(Cloud):
     def __init__(self, *args, **kwargs):
         super(AzureCloud, self).__init__(*args, **kwargs)

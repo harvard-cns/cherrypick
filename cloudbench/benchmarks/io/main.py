@@ -75,6 +75,7 @@ def parse_fio(result):
 def _fio_r100_w0(vm):
     vm_fio = vm.ssh(True)
     vm_fio << WaitUntilFinished('sudo killall fio')
+    vm_fio << WaitUntilFinished('sudo rm {0}'.format(FIO_FILENAME % vm.username))
     vm_fio << WaitUntilFinished('sudo fio --filename={0} --direct=1 \
 --rw=randrw --refill_buffers --norandommap --randrepeat=0 --ioengine=libaio \
 --bs=4k --rwmixread=100 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
@@ -85,6 +86,7 @@ def _fio_r100_w0(vm):
 def _fio_r70_w30(vm):
     vm_fio = vm.ssh(True)
     vm_fio << WaitUntilFinished('sudo killall fio')
+    vm_fio << WaitUntilFinished('sudo rm {0}'.format(FIO_FILENAME % vm.username))
     vm_fio << WaitUntilFinished('sudo fio --filename={0} --direct=1 \
 --rw=randrw --refill_buffers --norandommap --randrepeat=0 --ioengine=libaio \
 --bs=8k --rwmixread=70 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
