@@ -4,13 +4,16 @@ __pycache__/
 *$py.class
 
 # Distribution / packaging
+config/gcloud_ssh_key
 config/cloud.key
 config/cloud.pem
+config/cloud.pub
 tools/coremark_v1.0.tgz
 
 # Cloud storage files for benchmarks
 azure.json
 aws.json
+gcloud.json
 
 # Coverage test
 .coverage

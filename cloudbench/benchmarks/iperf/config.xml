@@ -33,4 +33,13 @@
         <config name='west'   value='us-west-1' />
         <config name='east'   value='us-east-1' />
     </aws>
+
+
+    <gcloud>
+        <config name='ubuntu1' value='ubuntu-14-04' />
+        <config name='ubuntu2' value='ubuntu-14-04' />
+        <config name='size'    value='n1-standard-2' />
+        <config name='west'    value='us-central1-a' />
+        <config name='east'    value='us-central1-b' />
+    </gcloud>
 </config>
