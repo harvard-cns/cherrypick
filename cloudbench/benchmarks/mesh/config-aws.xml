@@ -1,0 +1,77 @@
+<config>
+        <!-- Used to put VMs together -->
+    <locations>
+        <location name='gwestus'              location='config:westus'             />
+        <location name='geastus'              location='config:eastus'             />
+        <location name='gwesteurope'          location='config:westeurope'         />
+        <location name='gsoutheastasia'       location='config:southeastasia'      />
+        <location name='gjapaneast'           location='config:japaneast'          />
+    </locations>
+
+    <security-groups>
+        <security-group name='iperf' public-port='5001' private-port='5001' virtual-machines='vmwestus,vmeastus,vmwesteurope,vmsoutheastasia,vmjapaneast,vm2westus,vm2eastus,vm2westeurope,vm2southeastasia,vm2japaneast' protocol='tcp'/>
+    </security-groups>
+
+    <virtual-networks>
+        <virtual-network name='vnwestus'             location='gwestus'             address-range='10.0.0.0' />
+        <virtual-network name='vneastus'             location='geastus'             address-range='10.0.0.0' />
+        <virtual-network name='vnwesteurope'         location='gwesteurope'         address-range='10.0.0.0' />
+        <virtual-network name='vnsoutheastasia'      location='gsoutheastasia'      address-range='10.0.0.0' />
+        <virtual-network name='vnjapaneast'          location='gjapaneast'          address-range='10.0.0.0' />
+    </virtual-networks>
+
+    <virtual-machines>
+        <!-- Group 1 -->
+        <virtual-machine name='vmwestus'             virtual-network='vnwestus'             image='config:imagewestus'        type='config:vm-type' location='gwestus'/>
+        <virtual-machine name='vmeastus'             virtual-network='vneastus'             image='config:imageeastus'        type='config:vm-type' location='geastus'/>
+        <virtual-machine name='vmwesteurope'         virtual-network='vnwesteurope'         image='config:imagewesteurope'    type='config:vm-type' location='gwesteurope'/>
+        <virtual-machine name='vmsoutheastasia'      virtual-network='vnsoutheastasia'      image='config:imagesoutheastasia' type='config:vm-type' location='gsoutheastasia'/>
+        <virtual-machine name='vmjapaneast'          virtual-network='vnjapaneast'          image='config:imagejapaneast'     type='config:vm-type' location='gjapaneast'/>
+
+        <!-- Group 2 -->
+        <virtual-machine name='vm2westus'             virtual-network='vnwestus'             image='config:imagewestus'        type='config:vm-type' location='gwestus'/>
+        <virtual-machine name='vm2eastus'             virtual-network='vneastus'             image='config:imageeastus'        type='config:vm-type' location='geastus'/>
+        <virtual-machine name='vm2westeurope'         virtual-network='vnwesteurope'         image='config:imagewesteurope'    type='config:vm-type' location='gwesteurope'/>
+        <virtual-machine name='vm2southeastasia'      virtual-network='vnsoutheastasia'      image='config:imagesoutheastasia' type='config:vm-type' location='gsoutheastasia'/>
+        <virtual-machine name='vm2japaneast'          virtual-network='vnjapaneast'          image='config:imagejapaneast'     type='config:vm-type' location='gjapaneast'/>
+    </virtual-machines>
+
+    <azure>
+        <config name='storage' value='LRS' />
+        <config name='vm-type' value='Medium' />
+        <config name='imagewestus'          value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='imageeastus'          value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='imagewesteurope'      value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='imagesoutheastasia'   value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='imagejapaneast'       value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+
+        <config name='westus'             value='West US'              />
+        <config name='eastus'             value='East US'              />
+        <config name='westeurope'         value='West Europe'          />
+        <config name='southeastasia'      value='Southeast Asia'       />
+        <config name='japaneast'          value='Japan East'           />
+
+        <locations>
+            <add-values name='gwestus'             storage-type='config:storage'/>
+            <add-values name='geastus'             storage-type='config:storage'/>
+            <add-values name='gwesteurope'         storage-type='config:storage'/>
+            <add-values name='gsoutheastasia'      storage-type='config:storage'/>
+            <add-values name='gjapaneast'          storage-type='config:storage'/>
+        </locations>
+    </azure>
+
+    <aws>
+        <config name='vm-type' value='m4.large' />
+        <config name='imagewestus'          value='ami-bf3dccfb' />
+        <config name='imageeastus'          value='ami-c135f3aa' />
+        <config name='imagewesteurope'      value='ami-664b0a11' />
+        <config name='imagesoutheastasia'   value='ami-967879c4' />
+        <config name='imagejapaneast'       value='ami-a25cffa2' />
+
+        <config name='westus'             value='us-west-1'            />
+        <config name='eastus'             value='us-east-1'            />
+        <config name='westeurope'         value='eu-west-1'            />
+        <config name='southeastasia'      value='ap-southeast-1'       />
+        <config name='japaneast'          value='ap-northeast-1'       />
+    </aws>
+</config>
