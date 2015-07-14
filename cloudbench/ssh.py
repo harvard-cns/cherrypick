@@ -174,15 +174,12 @@ outputs are also logged and can be accessed for the purpose of
 benchmark: preparing the VM, execution of benchmark, and tearing down
 the VM
 """
-class Ssh:
+class Ssh(object):
     def __init__(self, vm, connect_string):
         self._commands = []
         self._connect_string = connect_string
         self._vm  = vm
         self._ip = None
-
-    def vm(self):
-        return self._vm
 
     @property
     def connect_string(self):
@@ -191,16 +188,6 @@ class Ssh:
         SSH clients use to connect to the server, e.g., username@domain
         """
         return self._connect_string
-
-    def ip(self):
-        """
-        Returns the public IP of the SSH server by using the ifconfig.me
-        website.
-        """
-        while not self._ip:
-            ip_cmd = self << WaitUntilFinished("curl ifconfig.me")
-            self._ip = ip_cmd.read().strip()
-        return self._ip
 
     def last_command(self):
         """

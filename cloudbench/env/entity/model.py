@@ -8,7 +8,7 @@ from cloudbench import constants
 
 from threading import RLock
 
-class VirtualMachine(SecureShell, Preemptable, EntityModel):
+class VirtualMachine(SecureShell, Preemptable, EntityModel, RsyncTransfer):
     location = depends_on_one('Location')
     virtual_network = depends_on_one('VirtualNetwork')
     log_storages = depends_on_many('LogStorage')

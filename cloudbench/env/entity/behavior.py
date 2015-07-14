@@ -1,5 +1,6 @@
 from threading import RLock
 from cloudbench.ssh import Ssh, WaitUp
+from cloudbench.rsync import Rsync
 
 import inflection
 import time
@@ -19,6 +20,13 @@ class SecureShell(object):
 
         self._ssh = Ssh(self, "".join([self.username, '@', self.url]))
         return self._ssh
+
+class RsyncTransfer(object):
+    def __init__(self, *args, **kwargs):
+        super(RsyncTransfer, self).__init__(*args, **kwargs)
+
+    def rsync(self):
+        return Rsync(self, "".join([self.username, '@', self.url]))
 
 class Preemptable(object):
     def __init__(self, *args, **kwargs):

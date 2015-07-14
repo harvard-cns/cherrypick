@@ -5,6 +5,7 @@ from multiprocessing.pool import ThreadPool
 from cloudbench.benchmarks.iperf.main import iperf, iperf_vnet
 from cloudbench.benchmarks.hping.main import hping, hping_vnet
 from cloudbench.benchmarks.io.main import fio
+from cloudbench.benchmarks.coremark.main import coremark, install_coremark
 
 import re
 import traceback, sys
@@ -25,9 +26,11 @@ def install(vm):
 
     if not hasattr(vm, '_install'):
         vm._install = True
-        vm.ssh() << WaitUntilFinished("sudo apt-get install hping3 -y")
-        vm.ssh() << WaitUntilFinished("sudo apt-get install iperf -y")
-        vm.ssh() << WaitUntilFinished("sudo apt-get install fio -y")
+        # vm.ssh() << WaitUntilFinished("sudo apt-get install hping3 -y")
+        # vm.ssh() << WaitUntilFinished("sudo apt-get install iperf -y")
+        # vm.ssh() << WaitUntilFinished("sudo apt-get install fio -y")
+
+        install_coremark(vm)
 
 def inter_experiment(params):
     """ Run inter dc experiments """
@@ -88,7 +91,7 @@ def single_experiment(params):
                     for vm in vms:
                         install(vm)
                     vm1 = vms[0]
-                    output = function(vm1, env)
+                    output = func(vm1, env)
                     save(env, output, exp+'mesh', vm1.location().location, vm1.location().location)
                 return execute
             env.benchmark.executor([vm], save_scope(function, exp), exp)
@@ -164,7 +167,7 @@ def run(env):
 
     inter_dc_experiments = ['iperf', 'hping']
     intra_dc_experiments = ['iperf_vnet', 'hping', 'iperf']
-    single_dc_experiments = ['fio']
+    single_dc_experiments = ['coremark', 'fio']
 
     regions = categorize(env)
 
