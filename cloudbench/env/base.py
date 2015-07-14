@@ -1,5 +1,5 @@
 from cloudbench.env.config.xml_config import EnvXmlConfig
-from cloudbench.env.clouds import AzureCloud, AwsCloud
+from cloudbench.env.clouds import AzureCloud, AwsCloud, GcloudCloud
 from cloudbench.executor import Executor
 from cloudbench.storage import AzureStorage, FileStorage, JsonStorage
 from cloudbench.util import parallel
@@ -18,12 +18,22 @@ class Benchmark(object):
         name -- name of the benchmark that will get executed
         directory -- directory to look for the benchmark and also save the results.
         env -- environment of the execution, e.g., the virtual machines, etc.
+
+        If there is a config-<cloud>.xml file in the benchmark folder
+        that file will be used for running the benchmarks, otherwise,
+        config.xml is used.
         """
         self._config = None
         self._env = env
         self._name = name
 
-        self._file = os.path.join(directory, 'config.xml')
+        # Choose the config file
+        config_file = os.path.join(directory, 'config-' + self._env.cloud_name + '.xml')
+        if (os.path.isfile(config_file)):
+            self._file = config_file
+        else:
+            self._file = os.path.join(directory, 'config.xml')
+
 
         self._storage_path = os.path.join(directory, env.cloud_name + '.json')
         self._storage = None
@@ -100,6 +110,8 @@ class Env(object):
             self._manager = AzureCloud(self)
         elif self._cloud == 'aws':
             self._manager = AwsCloud(self)
+        elif self._cloud =='gcloud':
+            self._manager = GcloudCloud(self)
 
         return self._manager
 
