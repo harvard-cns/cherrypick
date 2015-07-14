@@ -1,0 +1,122 @@
+<config>
+        <!-- Used to put VMs together -->
+    <locations>
+        <location name='gwestus'              location='config:westus'             />
+        <location name='gcentralus'           location='config:centralus'          />
+        <location name='gsouthcentralus'      location='config:southcentralus'     />
+        <location name='geastus'              location='config:eastus'             />
+        <location name='gnorthcentralus'      location='config:northcentralus'     />
+        <location name='geastus2'             location='config:eastus2'            />
+        <location name='gnortheurope'         location='config:northeurope'        />
+        <location name='gwesteurope'          location='config:westeurope'         />
+        <location name='gsoutheastasia'       location='config:southeastasia'      />
+        <location name='geastasia'            location='config:eastasia'           />
+        <location name='gjapanwest'           location='config:japanwest'          />
+        <location name='gjapaneast'           location='config:japaneast'          />
+        <location name='gbrazilsouth'         location='config:brazilsouth'        />
+        <location name='gaustraliasoutheast'  location='config:australiasoutheast' />
+        <location name='gaustraliaeast'       location='config:australiaeast'      />
+    </locations>
+
+    <security-groups>
+        <security-group name='iperf' public-port='5001' private-port='5001' virtual-machines='vmwestus,vmcentralus,vmsouthcentralus,vmeastus,vmnorthcentralus,vmeastus2,vmnortheurope,vmwesteurope,vmsoutheastasia,vmeastasia,vmjapanwest,vmjapaneast,vmbrazilsouth,vmaustraliasoutheast,vmaustraliaeast,vm2westus,vm2centralus,vm2southcentralus,vm2eastus,vm2northcentralus,vm2eastus2,vm2northeurope,vm2westeurope,vm2southeastasia,vm2eastasia,vm2japanwest,vm2japaneast,vm2brazilsouth,vm2australiasoutheast,vm2australiaeast' />
+    </security-groups>
+
+    <virtual-networks>
+        <virtual-network name='vnwestus'             location='gwestus'             address-range='10.0.0.0' />
+        <virtual-network name='vncentralus'          location='gcentralus'          address-range='10.0.0.0' />
+        <virtual-network name='vnsouthcentralus'     location='gsouthcentralus'     address-range='10.0.0.0' />
+        <virtual-network name='vneastus'             location='geastus'             address-range='10.0.0.0' />
+        <virtual-network name='vnnorthcentralus'     location='gnorthcentralus'     address-range='10.0.0.0' />
+        <virtual-network name='vneastus2'            location='geastus2'            address-range='10.0.0.0' />
+        <virtual-network name='vnnortheurope'        location='gnortheurope'        address-range='10.0.0.0' />
+        <virtual-network name='vnwesteurope'         location='gwesteurope'         address-range='10.0.0.0' />
+        <virtual-network name='vnsoutheastasia'      location='gsoutheastasia'      address-range='10.0.0.0' />
+        <virtual-network name='vneastasia'           location='geastasia'           address-range='10.0.0.0' />
+        <virtual-network name='vnjapanwest'          location='gjapanwest'          address-range='10.0.0.0' />
+        <virtual-network name='vnjapaneast'          location='gjapaneast'          address-range='10.0.0.0' />
+        <virtual-network name='vnbrazilsouth'        location='gbrazilsouth'        address-range='10.0.0.0' />
+        <virtual-network name='vnaustraliasoutheast' location='gaustraliasoutheast' address-range='10.0.0.0' />
+        <virtual-network name='vnaustraliaeast'      location='gaustraliaeast'      address-range='10.0.0.0' />
+    </virtual-networks>
+
+    <virtual-machines>
+        <!-- Group 1 -->
+        <virtual-machine name='vmwestus'             virtual-network='vnwestus'             image='config:image' type='config:vm-type' location='gwestus'/>
+        <virtual-machine name='vmcentralus'          virtual-network='vncentralus'          image='config:image' type='config:vm-type' location='gcentralus'/>
+        <virtual-machine name='vmsouthcentralus'     virtual-network='vnsouthcentralus'     image='config:image' type='config:vm-type' location='gsouthcentralus'/>
+        <virtual-machine name='vmeastus'             virtual-network='vneastus'             image='config:image' type='config:vm-type' location='geastus'/>
+        <virtual-machine name='vmnorthcentralus'     virtual-network='vnnorthcentralus'     image='config:image' type='config:vm-type' location='gnorthcentralus'/>
+        <virtual-machine name='vmeastus2'            virtual-network='vneastus2'            image='config:image' type='config:vm-type' location='geastus2'/>
+        <virtual-machine name='vmnortheurope'        virtual-network='vnnortheurope'        image='config:image' type='config:vm-type' location='gnortheurope'/>
+        <virtual-machine name='vmwesteurope'         virtual-network='vnwesteurope'         image='config:image' type='config:vm-type' location='gwesteurope'/>
+        <virtual-machine name='vmsoutheastasia'      virtual-network='vnsoutheastasia'      image='config:image' type='config:vm-type' location='gsoutheastasia'/>
+        <virtual-machine name='vmeastasia'           virtual-network='vneastasia'           image='config:image' type='config:vm-type' location='geastasia'/>
+        <virtual-machine name='vmjapanwest'          virtual-network='vnjapanwest'          image='config:image' type='config:vm-type' location='gjapanwest'/>
+        <virtual-machine name='vmjapaneast'          virtual-network='vnjapaneast'          image='config:image' type='config:vm-type' location='gjapaneast'/>
+        <virtual-machine name='vmbrazilsouth'        virtual-network='vnbrazilsouth'        image='config:image' type='config:vm-type' location='gbrazilsouth'/>
+        <virtual-machine name='vmaustraliasoutheast' virtual-network='vnaustraliasoutheast' image='config:image' type='config:vm-type' location='gaustraliasoutheast'/>
+        <virtual-machine name='vmaustraliaeast'      virtual-network='vnaustraliaeast'      image='config:image' type='config:vm-type' location='gaustraliaeast'/>
+
+        <!-- Group 2 -->
+        <virtual-machine name='vm2westus'             virtual-network='vnwestus'             image='config:image' type='config:vm-type' location='gwestus'/>
+        <virtual-machine name='vm2centralus'          virtual-network='vncentralus'          image='config:image' type='config:vm-type' location='gcentralus'/>
+        <virtual-machine name='vm2southcentralus'     virtual-network='vnsouthcentralus'     image='config:image' type='config:vm-type' location='gsouthcentralus'/>
+        <virtual-machine name='vm2eastus'             virtual-network='vneastus'             image='config:image' type='config:vm-type' location='geastus'/>
+        <virtual-machine name='vm2northcentralus'     virtual-network='vnnorthcentralus'     image='config:image' type='config:vm-type' location='gnorthcentralus'/>
+        <virtual-machine name='vm2eastus2'            virtual-network='vneastus2'            image='config:image' type='config:vm-type' location='geastus2'/>
+        <virtual-machine name='vm2northeurope'        virtual-network='vnnortheurope'        image='config:image' type='config:vm-type' location='gnortheurope'/>
+        <virtual-machine name='vm2westeurope'         virtual-network='vnwesteurope'         image='config:image' type='config:vm-type' location='gwesteurope'/>
+        <virtual-machine name='vm2southeastasia'      virtual-network='vnsoutheastasia'      image='config:image' type='config:vm-type' location='gsoutheastasia'/>
+        <virtual-machine name='vm2eastasia'           virtual-network='vneastasia'           image='config:image' type='config:vm-type' location='geastasia'/>
+        <virtual-machine name='vm2japanwest'          virtual-network='vnjapanwest'          image='config:image' type='config:vm-type' location='gjapanwest'/>
+        <virtual-machine name='vm2japaneast'          virtual-network='vnjapaneast'          image='config:image' type='config:vm-type' location='gjapaneast'/>
+        <virtual-machine name='vm2brazilsouth'        virtual-network='vnbrazilsouth'        image='config:image' type='config:vm-type' location='gbrazilsouth'/>
+        <virtual-machine name='vm2australiasoutheast' virtual-network='vnaustraliasoutheast' image='config:image' type='config:vm-type' location='gaustraliasoutheast'/>
+        <virtual-machine name='vm2australiaeast'      virtual-network='vnaustraliaeast'      image='config:image' type='config:vm-type' location='gaustraliaeast'/>
+    </virtual-machines>
+
+    <azure>
+        <config name='storage' value='LRS' />
+        <config name='vm-type' value='Medium' />
+        <config name='image'   value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+
+        <config name='westus'             value='West US'              />
+        <config name='centralus'          value='Central US'           />
+        <config name='southcentralus'     value='South Central US'     />
+        <config name='eastus'             value='East US'              />
+        <config name='northcentralus'     value='North Central US'     />
+        <config name='eastus2'            value='East US 2'            />
+        <config name='northeurope'        value='North Europe'         />
+        <config name='westeurope'         value='West Europe'          />
+        <config name='southeastasia'      value='Southeast Asia'       />
+        <config name='eastasia'           value='East Asia'            />
+        <config name='japanwest'          value='Japan West'           />
+        <config name='japaneast'          value='Japan East'           />
+        <config name='brazilsouth'        value='Brazil South'         />
+        <config name='australiasoutheast' value='Australia Southeast'  />
+        <config name='australiaeast'      value='Australia East'       />
+
+        <locations>
+            <add-values name='gwestus'             storage-type='config:storage'/>
+            <add-values name='gcentralus'          storage-type='config:storage'/>
+            <add-values name='gsouthcentralus'     storage-type='config:storage'/>
+            <add-values name='geastus'             storage-type='config:storage'/>
+            <add-values name='gnorthcentralus'     storage-type='config:storage'/>
+            <add-values name='geastus2'            storage-type='config:storage'/>
+            <add-values name='gnortheurope'        storage-type='config:storage'/>
+            <add-values name='gwesteurope'         storage-type='config:storage'/>
+            <add-values name='gsoutheastasia'      storage-type='config:storage'/>
+            <add-values name='geastasia'           storage-type='config:storage'/>
+            <add-values name='gjapanwest'          storage-type='config:storage'/>
+            <add-values name='gjapaneast'          storage-type='config:storage'/>
+            <add-values name='gbrazilsouth'        storage-type='config:storage'/>
+            <add-values name='gaustraliasoutheast' storage-type='config:storage'/>
+            <add-values name='gaustraliaeast'      storage-type='config:storage'/>
+        </locations>
+
+        <security-groups>
+            <add-values name='iperf' protocol='tcp' />
+        </security-groups>
+    </azure>
+</config>
