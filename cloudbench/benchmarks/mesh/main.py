@@ -167,7 +167,7 @@ def run(env):
 
     inter_dc_experiments = ['iperf', 'hping']
     intra_dc_experiments = ['iperf_vnet', 'hping', 'iperf']
-    single_dc_experiments = ['coremark', 'fio']
+    single_dc_experiments = ['coremark', 'fio', 'pmbw']
 
     regions = categorize(env)
 
