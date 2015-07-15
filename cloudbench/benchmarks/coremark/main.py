@@ -14,7 +14,7 @@ COREMARK_REMOTE_PATH='~/coremark/{0}'.format(COREMARK_DIR)
 def install_coremark(vm):
     vm.ssh() << WaitUntilFinished('sudo apt-get update -y')
     vm.ssh() << WaitUntilFinished('sudo apt-get install build-essential -y')
-    vm.ssh() << WaitUntilFinished("mkdir -p {0}".format(COREMARK_PATH))
+    vm.ssh() << WaitUntilFinished("'mkdir -p {0}'".format(COREMARK_PATH))
     rsync = vm.rsync()
     rsync.send("../tools/{0}".format(COREMARK_FILE), COREMARK_PATH)
     output = rsync.wait()

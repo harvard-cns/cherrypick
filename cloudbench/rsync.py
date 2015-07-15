@@ -25,7 +25,7 @@ class Rsync(object):
         """ Sends the source directory to the destination directory """
         self._lock.acquire()
         self._process = subprocess.Popen(shlex.split(
-                    "rsync -avz -e 'ssh -i ../config/cloud.key' {0} {1}:{2}".format(
+                    "rsync -avz -e 'ssh -i ../config/cloud.key -oStrictHostKeyChecking=no -q' {0} {1}:{2}".format(
                     source, self.connect_string, dest)), 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
