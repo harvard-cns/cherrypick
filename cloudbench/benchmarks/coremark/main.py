@@ -37,10 +37,10 @@ def coremark(vm, env):
     vm.ssh() << WaitUntilFinished("'cd {0} && tar zxf {1}'".format(COREMARK_PATH, COREMARK_FILE))
 
     # Warmup
-    vm.ssh() << WaitUntilFinished("'cd {0} && make'".format(COREMARK_REMOTE_PATH))
+    vm.ssh() << WaitUntilFinished("'cd {0} && make REBUILD=1'".format(COREMARK_REMOTE_PATH))
 
     # Execution
-    vm.ssh() << WaitUntilFinished("'cd {0} && make'".format(COREMARK_REMOTE_PATH))
+    vm.ssh() << WaitUntilFinished("'cd {0} && make REBUILD=1'".format(COREMARK_REMOTE_PATH))
 
     return parse_coremark(vm)
 
