@@ -6,6 +6,7 @@ from cloudbench.benchmarks.iperf.main import iperf, iperf_vnet
 from cloudbench.benchmarks.hping.main import hping, hping_vnet
 from cloudbench.benchmarks.io.main import fio
 from cloudbench.benchmarks.coremark.main import coremark, install_coremark
+from cloudbench.benchmarks.pmbw.main import pmbw, install_pmbw
 
 import re
 import traceback, sys
@@ -26,11 +27,12 @@ def install(vm):
 
     if not hasattr(vm, '_install'):
         vm._install = True
-        # vm.ssh() << WaitUntilFinished("sudo apt-get install hping3 -y")
-        # vm.ssh() << WaitUntilFinished("sudo apt-get install iperf -y")
-        # vm.ssh() << WaitUntilFinished("sudo apt-get install fio -y")
+        vm.ssh() << WaitUntilFinished("sudo apt-get install hping3 -y")
+        vm.ssh() << WaitUntilFinished("sudo apt-get install iperf -y")
+        vm.ssh() << WaitUntilFinished("sudo apt-get install fio -y")
 
         install_coremark(vm)
+        install_pmbw(vm)
 
 def inter_experiment(params):
     """ Run inter dc experiments """
