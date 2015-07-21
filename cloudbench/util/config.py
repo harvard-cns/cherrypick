@@ -11,3 +11,7 @@ class Config(object):
     azure_storage_account_key = os.environ['AZURE_STORAGE_KEY']
     # Azure storage name, used by storage.azure_storage
     azure_storage_account_name = os.environ['AZURE_STORAGE_NAME']
+
+    @staticmethod
+    def path(*args):
+        return os.path.abspath(os.path.join('..', *args))
