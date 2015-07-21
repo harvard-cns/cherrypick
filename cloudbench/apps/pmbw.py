@@ -1,4 +1,4 @@
-from util import Config
+from cloudbench.util import Config
 
 PMBW_PATH='~/pmbw'
 PMBW_FILE='pmbw-0.6.2.tar.bz2'
@@ -10,10 +10,10 @@ def install(vm):
     vm.package_manager.install('build-essential')
     vm.send(Config.path('tools', PMBW_FILE), PMBW_PATH)
 
-    vm.cd(PMBW_PATH)
-        .execute('tar xjf {0}'.format(PMBW_FILE))
-        .execute('./configure')
-        .execute('./make')
+    with vm.cd(PMBW_PATH) as cxt:
+        cxt.execute('tar xjf {0}'.format(PMBW_FILE))
+        cxt.execute('./configure')
+        cxt.execute('./make')
 
 def remove(vm):
     vm.rmdir(PMBW_PATH)

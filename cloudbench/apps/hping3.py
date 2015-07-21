@@ -1,4 +1,4 @@
-PROGRAM='hping'
+PROGRAM='hping3'
 
 def install(vm):
     return vm.package_manager.install(PROGRAM)

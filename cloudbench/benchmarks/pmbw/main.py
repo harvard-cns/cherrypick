@@ -1,23 +1,11 @@
 from cloudbench.ssh import WaitUntilFinished, WaitForSeconds
 from cloudbench.util import Debug
 
+from cloudbench.apps.pmbw import PMBW_PATH, PMBW_FILE, PMBW_REMOTE_PATH
+
 import re
 
-
 TIMEOUT=300
-
-PMBW_PATH='~/pmbw'
-PMBW_FILE='pmbw-0.6.2.tar.bz2'
-PMBW_DIR='pmbw-0.6.2'
-PMBW_REMOTE_PATH='{0}/{1}'.format(PMBW_PATH, PMBW_DIR)
-
-def install_pmbw(vm):
-    vm.ssh() << WaitUntilFinished('sudo apt-get update -y')
-    vm.ssh() << WaitUntilFinished('sudo apt-get install build-essential -y')
-    vm.ssh() << WaitUntilFinished("'mkdir -p {0}'".format(PMBW_PATH))
-    rsync = vm.rsync()
-    rsync.send("../tools/{0}".format(PMBW_FILE), PMBW_PATH)
-    output = rsync.wait()
 
 def extract_funcname(line):
     for part in filter(lambda x: x, re.split('\s+', line)):
@@ -45,13 +33,9 @@ def parse_pmbw(out):
 
     return output
 
-
-
 def pmbw(vm, env):
-    vm.ssh() << WaitUntilFinished("'cd {0} && tar xjf {1}'".format(PMBW_PATH, PMBW_FILE))
-
     # Build PMBW
-    vm.ssh() << WaitUntilFinished("'cd {0} && ./configure && make'".format(PMBW_REMOTE_PATH))
+    vm.execute("'cd {0} && ./configure && make'".format(PMBW_REMOTE_PATH))
 
     # Execution
     ssh = vm.ssh(new=True)
@@ -62,7 +46,7 @@ def pmbw(vm, env):
 
 def pmbw_test(vms, env):
     vm = vms[0]
-    install_pmbw(vm)
+    vm.install('pmbw')
     print pmbw(vm, env)
 
 def run(env):

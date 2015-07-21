@@ -3,12 +3,13 @@ import inflection
 from .entity_model import EntityModel, Entity
 from .relation import *
 from .behavior import *
+from .linux import Ubuntu
 
 from cloudbench import constants
 
 from threading import RLock
 
-class VirtualMachine(SecureShell, Preemptable, EntityModel, RsyncTransfer):
+class VirtualMachine(Preemptable, EntityModel, Ubuntu):
     location = depends_on_one('Location')
     virtual_network = depends_on_one('VirtualNetwork')
     log_storages = depends_on_many('LogStorage')

@@ -20,21 +20,14 @@ def _hping_ip(vm1, vm2, vm2_address):
     rtts = []
 
     while not(rtts):
-        vm1_ssh = vm1.ssh(new=True)
-        vm1_ssh_warmup = vm1.ssh(new=True)
         query = 'sudo hping3 -c 20 -S -I eth0 -p 22 ' + vm2_address
         warmup = 'sudo hping3 -c 5 -S -I eth0 -p 22 ' + vm2_address
 
         # Run a warmup
         for _ in range(1):
-            vm1_ssh_warmup << WaitUntilFinished(warmup)
+            vm1.execute(warmup)
 
-        vm1_ssh_warmup.terminate()
-
-        vm1_ssh << WaitUntilFinished(query)
-        vm1_ssh.terminate()
-
-        rtts = _extract_rtts(vm1_ssh.read())
+        rtts = _extract_rtts(vm1.execute(query))
 
     out = {
         'server_location': vm2.location().location, # The VM the answered the ping
@@ -53,10 +46,7 @@ def hping(vm1, vm2, env):
     return _hping_ip(vm1, vm2, vm2.url)
 
 def hping_vnet(vm1, vm2, env):
-    vm2_ssh = vm1.ssh(new=True)
-    vm2_ssh << WaitUntilFinished("hostname -I")
-    vm2_ip = vm2_ssh.read()
-
+    vm2_ip = vm2.execute('hostname -I').strip()
     return _hping_ip(vm1, vm2, vm2_ip)
 
 def run(env):
@@ -64,8 +54,8 @@ def run(env):
     vm_west = env.vm('vm-west')
 
     Debug << 'Installing hping3\n'
-    vm_east.ssh() << WaitUntilFinished('sudo apt-get install hping3 -y')
-    vm_west.ssh() << WaitUntilFinished('sudo apt-get install hping3 -y')
+    vm_east.install('hping3')
+    vm_west.install('hping3')
 
     output = hping(vm_east, vm_west, env)
     print output

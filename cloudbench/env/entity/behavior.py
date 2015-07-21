@@ -5,10 +5,15 @@ from cloudbench.rsync import Rsync
 import inflection
 import time
 
-class SecureShell(object):
+class Base(object):
     def __init__(self, *args, **kwargs):
-        super(SecureShell, self).__init__(*args, **kwargs)
+        super(Base, self).__init__()
+
+class SecureShell(Base):
+    def __init__(self, *args, **kwargs):
+        print "Calling secure shell"
         self._ssh = None
+        super(SecureShell, self).__init__(*args, **kwargs)
 
     def ssh(self, new=False, waitUp=True):
         """ Return a SSH tunnel."""
@@ -21,14 +26,105 @@ class SecureShell(object):
         self._ssh = Ssh(self, "".join([self.username, '@', self.url]))
         return self._ssh
 
-class RsyncTransfer(object):
+    def execute(self, command, daemon=False):
+        ssh = self.ssh(new=True)
+        cmd = (ssh << command)
+        if daemon:
+            return None
+
+        cmd.wait()
+        return cmd.read()
+
+class Installer(Base):
     def __init__(self, *args, **kwargs):
+        print "Calling installer"
+        super(Installer, self).__init__(*args, **kwargs)
+
+    def install(self, package):
+        pass
+
+    def installed(self, package):
+        pass
+
+    def remove(self, package):
+        pass
+
+class LinuxInstaller(Installer):
+    def __init__(self, *args, **kwargs):
+        print "Calling linux installer"
+        super(LinuxInstaller, self).__init__(*args, **kwargs)
+
+    def install(self, package):
+        return self.module(package, 'install').install(self)
+
+    def installed(self, package):
+        return self.module(package, 'installed').installed(self)
+
+    def remove(self, package):
+        return self.module(package, 'remove').remove(self)
+
+    def module(self, package, what):
+        return __import__('cloudbench.apps.' + package, fromlist=[what])
+
+class FileSystem(Base):
+    class Cd(Base):
+        def __init__(self, vm, directory):
+            self.vm_ = vm
+            self.dir_ = directory
+
+        def execute(self, command):
+            return self.vm_.execute('cd %s && %s' % (self.dir_, command))
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, typ, value, traceback):
+            pass
+
+    def __init__(self, *args, **kwargs):
+        print 'Calling Directory'
+        super(FileSystem, self).__init__(*args, **kwargs)
+
+    def mkdir(self, name):
+        pass
+
+    def rmdir(self, name):
+        pass
+
+    def cd(self, directory):
+        return FileSystem.Cd(self, directory)
+
+class LinuxFileSystem(FileSystem):
+    def __init__(self, *args, **kwargs):
+        print 'calling LinuxDirectory'
+        print 'Directory: %s' % super(LinuxFileSystem, self)
+        super(LinuxFileSystem, self).__init__(*args, **kwargs)
+
+    def mkdir(self, name):
+        return self.execute('mkdir %s' % name)
+
+    def rmdir(self, name):
+        return self.execute('rm -rf %s' % name)
+
+class RsyncTransfer(Base):
+    def __init__(self, *args, **kwargs):
+        print 'Calling RsyncTransfer'
         super(RsyncTransfer, self).__init__(*args, **kwargs)
 
     def rsync(self):
         return Rsync(self, "".join([self.username, '@', self.url]))
 
-class Preemptable(object):
+    def send(self, what, where):
+        client = self.rsync()
+        client.send(what, where)
+        client.wait()
+
+    def recv(self, what, where):
+        client = self.rsync()
+        client.recv(what, where)
+        client.wait()
+
+class Preemptable(Base):
     def __init__(self, *args, **kwargs):
         super(Preemptable, self).__init__(*args, **kwargs)
         self._lock = RLock()

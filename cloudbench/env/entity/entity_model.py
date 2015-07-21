@@ -59,6 +59,8 @@ class EntityModel(object):
     __metaclass__ = Entity
 
     def __init__(self, name = '', config = {}, env = None):
+        super(EntityModel, self).__init__()
+
         self._env = env
         self._name = name
         self._config = config

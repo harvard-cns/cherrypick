@@ -9,8 +9,7 @@ TIMEOUT=300
 FIO_FILENAME='/home/%s/fio.file'
 
 def install(vm):
-    vm.ssh() << WaitUntilFinished('sudo apt-get install fio -y') \
-             << WaitUntilFinished('sudo apt-get install bonnie++ -y')
+    vm.install('fio')
 
 def parse_fio(result):
     """ Output of fio looks like:
@@ -73,26 +72,22 @@ def parse_fio(result):
     return out
 
 def _fio_r100_w0(vm):
-    vm_fio = vm.ssh(True)
-    vm_fio << WaitUntilFinished('sudo killall fio')
-    vm_fio << WaitUntilFinished('sudo rm {0}'.format(FIO_FILENAME % vm.username))
-    vm_fio << WaitUntilFinished('sudo fio --filename={0} --direct=1 \
+    vm.execute('sudo killall fio')
+    vm.execute('sudo rm -rf {0}'.format(FIO_FILENAME % vm.username))
+    output = vm.execute('sudo fio --filename={0} --direct=1 \
 --rw=randrw --refill_buffers --norandommap --randrepeat=0 --ioengine=libaio \
 --bs=4k --rwmixread=100 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
 --group_reporting --name=4ktest'.format(FIO_FILENAME % vm.username, 200*1024*1024))
-    vm_fio.terminate()
-    return parse_fio(vm_fio.read())
+    return parse_fio(output)
 
 def _fio_r70_w30(vm):
-    vm_fio = vm.ssh(True)
-    vm_fio << WaitUntilFinished('sudo killall fio')
-    vm_fio << WaitUntilFinished('sudo rm {0}'.format(FIO_FILENAME % vm.username))
-    vm_fio << WaitUntilFinished('sudo fio --filename={0} --direct=1 \
+    vm.execute('sudo killall fio')
+    vm.execute('sudo rm -rf {0}'.format(FIO_FILENAME % vm.username))
+    output = vm.execute('sudo fio --filename={0} --direct=1 \
 --rw=randrw --refill_buffers --norandommap --randrepeat=0 --ioengine=libaio \
 --bs=8k --rwmixread=70 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
 --group_reporting --name=8k7030test'.format(FIO_FILENAME % vm.username, 200*1024*1024))
-    vm_fio.terminate()
-    return parse_fio(vm_fio.read())
+    return parse_fio(output)
 
 def fio(vm, env):
     output = {}
@@ -125,5 +120,5 @@ def run(env):
 
     env.benchmark.executor([vm1], fio_test)
     env.benchmark.executor.run()
-    env.benchmark.executor.stop()
+    #env.benchmark.executor.stop()
 
