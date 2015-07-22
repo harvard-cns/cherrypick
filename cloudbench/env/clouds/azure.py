@@ -151,7 +151,6 @@ class AzureCloud(Cloud):
         We don't actually delete anything here, it's just a method that
         should be provided by the cloud interface """
 
-        print "Deleting security group"
         return True
 
     def delete_virtual_machine(self, virtual_machine):

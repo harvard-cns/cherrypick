@@ -83,7 +83,6 @@ class AwsCloud(Cloud):
     def start_virtual_machine(self, vm):
         # aws ec2 start-instances --instance-ids <the instance id you get from the output of run-instances>
         with self.lock:
-            print "Starting the Virtual Machine: %s" % vm
             self.to_location_of(vm)
             vid = self.vm_id(vm, throw=True)
             cmd = ['aws', 'ec2', 'start-instances',
@@ -94,7 +93,6 @@ class AwsCloud(Cloud):
     def stop_virtual_machine(self, vm):
         # aws ec2 stop-instances --instance-ids <the instance id you get from the output of run-instances>
         with self.lock:
-            print "Stopping the Virtual Machine: %s" % vm
             if self.vm_id(vm, throw=True) is None:
                 return True
 
@@ -112,7 +110,6 @@ class AwsCloud(Cloud):
         output = {}
         while True:
             with self.lock:
-                print "Returning Virtual Machine Address."
                 self.to_location_of(vm)
                 vid = self.vm_id(vm, throw=True)
                 cmd = ['aws', 'ec2', 'describe-instances', '--instance-ids',
@@ -147,7 +144,6 @@ class AwsCloud(Cloud):
 
         # Note: read the output and remember the id of VPC
         with self.lock:
-            print 'Initiating location (%s)' % group
             self.to_location_of(group)
 
             #TODO: Try to create the security group
@@ -218,7 +214,6 @@ class AwsCloud(Cloud):
 
         # Note: different datacenters (locations) have different image-id even for the same OS type and version. Refer data/awsaims.txt for the mapping from locations to image-id.
         with self.lock:
-            print 'Creating virtual machine (%s)' % vm
             self.to_location_of(vm)
             output = {}
 
@@ -244,7 +239,6 @@ class AwsCloud(Cloud):
 
     def status_virtual_machine(self, vm):
         with self.lock:
-            print "Returning the status of the virtual-machine"
             if self.vm_id(vm) is None:
                 return True
 
@@ -253,7 +247,6 @@ class AwsCloud(Cloud):
             self.exe('describe-instances --instance-ids {0} --query \
             "Reservations[0].Instances[0].State.Code"'.format(self.vm_id(vm)), output)
 
-            print output
             if (not (output['stdout'].strip())):
                 return None
 
@@ -266,7 +259,6 @@ class AwsCloud(Cloud):
             return False
 
     def create_virtual_network(self, vnet):
-        print 'Creating virtual network (%s)' % vnet
         # aws ec2 create-subnet --vpc-id <value> --cidr-block <IP prefix with "/">.
 
         with self.lock:
@@ -292,7 +284,6 @@ class AwsCloud(Cloud):
             return True
 
     def delete_security_group(self, group):
-        print "Deleting security group (%s)" % group
         with self.lock:
             for vm in group.virtual_machines():
                 loc = self.location_of(vm)
@@ -309,7 +300,6 @@ class AwsCloud(Cloud):
 
     def delete_virtual_machine(self, vm):
         with self.lock:
-            print "Deleting virtual machine (%s)" % vm
             # Return true if we have already deleted this one
             if not self.vm_id(vm, throw=False):
                 return True
@@ -328,7 +318,6 @@ class AwsCloud(Cloud):
         # aws ec2 delete-subnet
         # Return true if we have already deleted this vnet
         with self.lock:
-            print "Deleting virtual network (%s)" % vnet
             if not self.vnet_id(vnet, throw=False):
                 return True
 
@@ -341,7 +330,6 @@ class AwsCloud(Cloud):
 
     def delete_location(self, group):
         # aws ec2 delete-security-group
-        print "Deleting location (%s)" % group
 
         with self.lock:
             if not self.data['security-group-' + group.location]:

@@ -106,8 +106,6 @@ class Executor(object):
     def add_dead_entities(self, entities):
         """ Add dead entities """
         self._dead_entities = self._dead_entities.union(entities)
-        print map(lambda x: x.name, entities), len(self.jobs_of(self._dead_entities))
-        print "\n".join(map(lambda x: x.name, self._dead_entities))
 
         # Remove the rest of the jobs that can't be run
         self._remaining_jobs = self._remaining_jobs - self.jobs_of(entities)

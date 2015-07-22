@@ -11,7 +11,6 @@ class Base(object):
 
 class SecureShell(Base):
     def __init__(self, *args, **kwargs):
-        print "Calling secure shell"
         self._ssh = None
         super(SecureShell, self).__init__(*args, **kwargs)
 
@@ -37,7 +36,6 @@ class SecureShell(Base):
 
 class Installer(Base):
     def __init__(self, *args, **kwargs):
-        print "Calling installer"
         super(Installer, self).__init__(*args, **kwargs)
 
     def install(self, package):
@@ -51,7 +49,6 @@ class Installer(Base):
 
 class LinuxInstaller(Installer):
     def __init__(self, *args, **kwargs):
-        print "Calling linux installer"
         super(LinuxInstaller, self).__init__(*args, **kwargs)
 
     def install(self, package):
@@ -82,7 +79,6 @@ class FileSystem(Base):
             pass
 
     def __init__(self, *args, **kwargs):
-        print 'Calling Directory'
         super(FileSystem, self).__init__(*args, **kwargs)
 
     def mkdir(self, name):
@@ -96,8 +92,6 @@ class FileSystem(Base):
 
 class LinuxFileSystem(FileSystem):
     def __init__(self, *args, **kwargs):
-        print 'calling LinuxDirectory'
-        print 'Directory: %s' % super(LinuxFileSystem, self)
         super(LinuxFileSystem, self).__init__(*args, **kwargs)
 
     def mkdir(self, name):
@@ -108,7 +102,6 @@ class LinuxFileSystem(FileSystem):
 
 class RsyncTransfer(Base):
     def __init__(self, *args, **kwargs):
-        print 'Calling RsyncTransfer'
         super(RsyncTransfer, self).__init__(*args, **kwargs)
 
     def rsync(self):
