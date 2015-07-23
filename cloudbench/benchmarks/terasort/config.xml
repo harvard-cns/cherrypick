@@ -4,8 +4,13 @@
     </locations>
 
     <virtual-machines>
-        <virtual-machine name='vm-terasort' image='config:ubuntu' type='config:size' location='us'/>
+        <virtual-machine name='vm1' virtual-network='vn1' image='config:ubuntu' type='config:size' location='us'/>
+        <virtual-machine name='vm2' virtual-network='vn1' image='config:ubuntu' type='config:size' location='us'/>
     </virtual-machines>
+
+    <virtual-networks>
+        <virtual-network name='vn1' location='us' address-range='10.0.0.0' />
+    </virtual-networks>
 
     <azure>
         <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />

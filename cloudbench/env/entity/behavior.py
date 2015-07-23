@@ -2,6 +2,9 @@ from threading import RLock
 from cloudbench.ssh import Ssh, WaitUp
 from cloudbench.rsync import Rsync
 
+import tempfile
+import base64
+
 import inflection
 import time
 
@@ -12,6 +15,7 @@ class Base(object):
 class SecureShell(Base):
     def __init__(self, *args, **kwargs):
         self._ssh = None
+        self._public_keys = {}
         super(SecureShell, self).__init__(*args, **kwargs)
 
     def ssh(self, new=False, waitUp=True):
@@ -33,6 +37,36 @@ class SecureShell(Base):
 
         cmd.wait()
         return cmd.read()
+
+    def script(self, script, daemon=False):
+        data = base64.b64encode(script)
+        return self.execute("'echo {0} | base64 -d | sudo bash'".format(data), daemon)
+
+    def generate_keys(self, user):
+        gen_key_cmd = "sudo su {0} -c 'ssh-keygen -t rsa -q -f/home/{0}/.ssh/id_rsa -N \"\" -q'"
+        self.script(gen_key_cmd.format(user))
+
+    def public_key(self, user=None):
+        if not user:
+            user = self.username
+
+        if user in self._public_keys:
+            return self._public_keys[user]
+
+        out = ''
+        cmd = 'sudo su {0} -c "cat /home/{0}/.ssh/id_rsa.pub"'.format(user)
+        tries = 3
+
+        while not out:
+            out = self.script(cmd).strip()
+            tries -= 1
+            if tries < 0:
+                # Probably the user doesn't have ssh keys, generate them?
+                self.generate_keys(user)
+                return self.public_key(user)
+        self._public_keys[user] = out 
+
+        return out
 
 class Installer(Base):
     def __init__(self, *args, **kwargs):
