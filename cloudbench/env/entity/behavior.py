@@ -39,6 +39,7 @@ class SecureShell(Base):
         return cmd.read()
 
     def script(self, script, daemon=False):
+        print script
         data = base64.b64encode(script)
         return self.execute("'echo {0} | base64 -d | sudo bash'".format(data), daemon)
 

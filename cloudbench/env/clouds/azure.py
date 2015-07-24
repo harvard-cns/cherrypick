@@ -52,7 +52,6 @@ class AzureCloud(Cloud):
         return self.execute(cmd)
 
     def status_virtual_machine(self, vm):
-        return True
         return vm._started
 
         # cmd = ['azure', 'vm', 'show', self.unique(vm.name)]

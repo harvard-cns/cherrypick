@@ -22,7 +22,7 @@ def get_hadoop(vm):
     vm.script("sudo su {0} -c \"sed -i '/export JAVA_HOME.*/c\export JAVA_HOME=/usr/lib/jvm/java-8-oracle' {1}/etc/hadoop/hadoop-env.sh\"".format(HADOOP_USER, HADOOP_DIR))
 
 def setup_user_env(vm):
-    hadoop_env = """sudo su {0} -c cat <<EOT >> /home/{0}/.bashrc
+    hadoop_env = """sudo su {0} -c cat <<EOT >> /home/{0}/.profile
 export JAVA_HOME=/usr/lib/jvm/java-8-oracle
 export HADOOP_INSTALL={1}
 export PATH=\$PATH:\$HADOOP_INSTALL/bin
