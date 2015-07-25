@@ -4,18 +4,31 @@
     </locations>
 
     <virtual-machines>
-        <virtual-machine name='vm-dacapo0' image='config:ubuntu' type='config:size' location='us'/>
-        <virtual-machine name='vm-dacapo1' image='config:ubuntu' type='config:size' location='us'/>
-        <virtual-machine name='vm-dacapo2' image='config:ubuntu' type='config:size' location='us'/>
-        <virtual-machine name='vm-dacapo3' image='config:ubuntu' type='config:size' location='us'/>
-        <virtual-machine name='vm-dacapo4' image='config:ubuntu' type='config:size' location='us'/>
+        <virtual-machine name='vm-dacapo0'  image='config:ubuntu' type='A5' location='us'/>
+        <virtual-machine name='vm-dacapo1'  image='config:ubuntu' type='A6' location='us'/>
+        <virtual-machine name='vm-dacapo2'  image='config:ubuntu' type='A7' location='us'/>
+        <virtual-machine name='vm-dacapo3'  image='config:ubuntu' type='A8' location='us'/>
+        <virtual-machine name='vm-dacapo4'  image='config:ubuntu' type='A9' location='us'/>
+        <virtual-machine name='vm-dacapo5'  image='config:ubuntu' type='A10' location='us'/>
+        <virtual-machine name='vm-dacapo6'  image='config:ubuntu' type='A11' location='us'/>
+        <virtual-machine name='vm-dacapo7'  image='config:ubuntu' type='Basic_A0' location='us'/>
+        <virtual-machine name='vm-dacapo8'  image='config:ubuntu' type='Basic_A1' location='us'/>
+        <virtual-machine name='vm-dacapo9'  image='config:ubuntu' type='Basic_A2' location='us'/>
+        <virtual-machine name='vm-dacapo10' image='config:ubuntu' type='Basic_A3' location='us'/>
+        <virtual-machine name='vm-dacapo11' image='config:ubuntu' type='Basic_A4' location='us'/>
+        <virtual-machine name='vm-dacapo12' image='config:ubuntu' type='Standard_D1' location='us'/>
+        <virtual-machine name='vm-dacapo13' image='config:ubuntu' type='Standard_D2' location='us'/>
+        <virtual-machine name='vm-dacapo14' image='config:ubuntu' type='Standard_D3' location='us'/>
+        <virtual-machine name='vm-dacapo15' image='config:ubuntu' type='Standard_D4' location='us'/>
+        <virtual-machine name='vm-dacapo16' image='config:ubuntu' type='Standard_D11' location='us'/>
+        <virtual-machine name='vm-dacapo17' image='config:ubuntu' type='Standard_D12' location='us'/>
+        <virtual-machine name='vm-dacapo18' image='config:ubuntu' type='Standard_D13' location='us'/>
+        <virtual-machine name='vm-dacapo19' image='config:ubuntu' type='Standard_D14' location='us'/>
     </virtual-machines>
 
     <azure>
         <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
-        <config name='size'   value='Small' />
         <config name='us'   value='West US' />
-
         <locations>
             <add-values name='us' storage-type='LRS' /> 
         </locations>

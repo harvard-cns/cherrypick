@@ -23,4 +23,4 @@ test:
 prereqs:
 	pip install -r requirements.txt
 
-keys: gcloud_key, aws_key
+keys: gcloud_key aws_key
