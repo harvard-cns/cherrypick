@@ -103,17 +103,14 @@ class AzureCloud(Cloud):
         """ Create endpoints in the microsoft terms """
         ret = True
         # TODO: Can parallelize here
-        for vm in ep.virtual_machines():
+        def create_endpoint(vm):
             cmd = ['azure', 'vm', 'endpoint', 'create']
             cmd += [self.unique(vm), ep.public_port, ep.private_port]
             cmd += ['--endpoint-name', self.unique(ep.name)]
             cmd += ['--endpoint-protocol', ep.protocol]
+            self.execute(cmd)
 
-            ret = self.execute(cmd)
-
-            if ret is False:
-                return False
-
+        parallel(create_endpoint, ep.virtual_machines())
         return ret
 
     def create_virtual_machine(self, vm):

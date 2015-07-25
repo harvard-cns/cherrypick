@@ -12,7 +12,7 @@ def create_user(vm):
 
 
 def get_hadoop(vm):
-    vm.script("wget -rc -nd 'http://apache.mirrors.pair.com/hadoop/core/hadoop-2.7.1/hadoop-2.7.1.tar.gz'")
+    vm.script("wget -q -rc -nd 'http://apache.mirrors.pair.com/hadoop/core/hadoop-2.7.1/hadoop-2.7.1.tar.gz'")
     vm.script("tar -xzf hadoop-2.7.1.tar.gz")
     vm.script("sudo mkdir -p %s" % HADOOP_DIR)
     vm.script("sudo mv hadoop-2.7.1/* %s" % HADOOP_DIR)
