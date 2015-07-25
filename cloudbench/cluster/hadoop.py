@@ -32,6 +32,11 @@ YarnSiteTemplate="""<?xml version="1.0"?>
 </configuration>
 """
 
+EtcHostsTemplate="""
+127.0.0.1\tlocalhost
+{0}
+"""
+
 Ports=[54310, 54311, ]
 
 def modify_hadoop_config(config, f):
@@ -81,7 +86,7 @@ class HadoopCluster(Cluster):
            </property> 
         """
 
-        config = CoreSiteTemplate.format(config.format(HADOOP_USER, self.master_ip()))
+        config = CoreSiteTemplate.format(config.format(HADOOP_USER, self.master.name))
         command = modify_hadoop_config(config, '/etc/hadoop/core-site.xml')
     
         # Upload the file in parallel
@@ -106,7 +111,7 @@ class HadoopCluster(Cluster):
  <description>The framework for running mapreduce jobs</description>
 </property>
 """
-        config = MapRedSiteTemplate.format(config.format(self.master_ip()))
+        config = MapRedSiteTemplate.format(config.format(self.master.name))
         self.master.script(modify_hadoop_config(config, '/etc/hadoop/mapred-site.xml'))
 
     def setup_hdfs_site(self):
@@ -120,7 +125,7 @@ class HadoopCluster(Cluster):
         config = """
 <property>
  <name>dfs.replication</name>
- <value>2</value>
+ <value>3</value>
  <description>Default block replication.
   The actual number of replications can be specified when the file is created.
   The default is used if replication is not specified in create time.
@@ -170,14 +175,20 @@ class HadoopCluster(Cluster):
   <value>{0}:8033</value>
 </property>
 """
-        config = YarnSiteTemplate.format(config.format(self.master_ip())) 
+        config = YarnSiteTemplate.format(config.format(self.master.name)) 
         command = modify_hadoop_config(config, '/etc/hadoop/yarn-site.xml')
         parallel(lambda vm: vm.script(command), self.all_nodes())
 
     def setup_slaves(self):
-        names = set() 
+        hosts = ""
+        names = set()
         for node in self.all_nodes():
-            names.add(node.intf_ip('eth0'))
+            hosts = hosts + "\n" + "{0}\t{1}".format(node.intf_ip('eth0'), node.name)
+            names.add(node.name)
+
+        for node in self.all_nodes():
+            command = "sudo cat <<EOT > /etc/hosts\n{0}\nEOT"
+            node.script(command.format(EtcHostsTemplate.format(hosts)))
 
         config = "\n".join(list(names))
         command = modify_hadoop_config(config, '/etc/hadoop/slaves')
