@@ -4,6 +4,9 @@ from cloudbench.util import parallel
 
 # The instruction is taken from:
 # https://chawlasumit.wordpress.com/2015/03/09/install-a-multi-node-hadoop-cluster-on-ubuntu-14-04/
+def bytes2mega(size):
+    return size/(1024*1024)
+
 
 CoreSiteTemplate="""<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
@@ -95,7 +98,7 @@ class HadoopCluster(Cluster):
     def all_nodes(self):
         return list(set([self.master] + self.slaves))
 
-    def setup_mapred_site(self):
+    def mapred_config(self, vm):
         config = """
 <property>
  <name>mapreduce.jobtracker.address</name>
@@ -110,9 +113,37 @@ class HadoopCluster(Cluster):
  <value>yarn</value>
  <description>The framework for running mapreduce jobs</description>
 </property>
+<property>
+  <name>mapreduce.map.memory.mb</name>
+  <value>{1}</value>
+</property>
+<property>
+  <name>mapreduce.reduce.memory.mb</name>
+  <value>{2}</value>
+</property>
+<property>
+  <name>mapreduce.map.java.opts</name>
+  <value>-Xmx{3}m</value>
+</property>
+<property>
+  <name>mapreduce.reduce.java.opts</name>
+  <value>-Xmx{4}m</value>
+</property>
 """
-        config = MapRedSiteTemplate.format(config.format(self.master.name))
-        self.master.script(modify_hadoop_config(config, '/etc/hadoop/mapred-site.xml'))
+        map_size = bytes2mega(vm.memory()) / (vm.cpus() * 2)
+        red_size = bytes2mega(vm.memory()) / (vm.cpus() * 1)
+        
+        map_heap_size = map_size * 3 / 4
+        red_heap_size = red_size * 3 / 4
+
+        config = MapRedSiteTemplate.format(
+                config.format(self.master.name, map_size, red_size,
+                    map_heap_size, red_heap_size))
+
+        return modify_hadoop_config(config, '/etc/hadoop/mapred-site.xml')
+
+    def setup_mapred_site(self):
+        self.master.script(self.mapred_config(self.master))
 
     def setup_hdfs_site(self):
         dirs = ["/home/{0}/hdfs/datanode", "/home/{0}/hdfs/namenode"]
@@ -148,11 +179,15 @@ class HadoopCluster(Cluster):
         command = modify_hadoop_config(config, '/etc/hadoop/hdfs-site.xml')
         parallel(lambda vm: vm.script(command), self.all_nodes())
 
-    def setup_yarn_site(self):
+    def yarn_config(self, vm):
         config = """
 <property>
  <name>yarn.nodemanager.aux-services</name>
  <value>mapreduce_shuffle</value>
+</property>
+<property>
+  <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+  <value>org.apache.hadoop.mapred.ShuffleHandler</value>
 </property>
 <property>
  <name>yarn.resourcemanager.scheduler.address</name>
@@ -174,10 +209,33 @@ class HadoopCluster(Cluster):
   <name>yarn.resourcemanager.admin.address</name>
   <value>{0}:8033</value>
 </property>
+<property>
+  <name>yarn.nodemanager.resource.memory-mb</name>
+  <value>{1}</value>
+</property>
+<property>
+  <name>yarn.scheduler.minimum-allocation-mb</name>
+  <value>{2}</value>
+</property>
+<property>
+  <name>yarn.resourcemanager.hostname</name>
+  <value>{0}</value>
+</property>
 """
-        config = YarnSiteTemplate.format(config.format(self.master.name)) 
-        command = modify_hadoop_config(config, '/etc/hadoop/yarn-site.xml')
-        parallel(lambda vm: vm.script(command), self.all_nodes())
+        total_mem_size = bytes2mega(vm.memory()) - 1024
+        min_mem_size   = total_mem_size / (vm.cpus()*3)
+
+        config = YarnSiteTemplate.format(
+                config.format(self.master.name, total_mem_size, min_mem_size)) 
+
+        print "-"*80
+        print "-"*80
+        print config
+        print "-"*80
+        return modify_hadoop_config(config, '/etc/hadoop/yarn-site.xml')
+
+    def setup_yarn_site(self):
+        parallel(lambda vm: vm.script(self.yarn_config(vm)), self.all_nodes())
 
     def setup_slaves(self):
         hosts = ""
@@ -189,6 +247,8 @@ class HadoopCluster(Cluster):
         for node in self.all_nodes():
             command = "sudo cat <<EOT > /etc/hosts\n{0}\nEOT"
             node.script(command.format(EtcHostsTemplate.format(hosts)))
+            node.script('sudo hostname {0}'.format(node.name))
+            node.script('echo \'echo {0} > /etc/hostname\' | sudo bash'.format(node.name))
 
         config = "\n".join(list(names))
         command = modify_hadoop_config(config, '/etc/hadoop/slaves')

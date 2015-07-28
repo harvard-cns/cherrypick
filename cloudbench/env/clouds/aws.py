@@ -21,6 +21,7 @@ class AwsCloud(Cloud):
         self.lock = RLock()
         constants.DEFAULT_VM_USERNAME = 'ubuntu'
         self.security_groups = {}
+        self.addresses = {}
 
     def execute(self, cmd, output={}):
         repeat = True
@@ -34,7 +35,6 @@ class AwsCloud(Cloud):
 
         return ret
                 
-
     def location_of(self, entity):
         if hasattr(entity, 'location'):
             if callable(entity.location) and isinstance(entity.location(), Location):
@@ -74,11 +74,18 @@ class AwsCloud(Cloud):
 
     def exe(self, cmd, output={}):
         """ Short hand for running aws commands """
-        cmd = 'aws ec2 ' + cmd
+        print cmd
+        cmd = 'echo ' + base64.b64encode('aws ec2 ' + cmd) + ' | base64 -d | bash'
         return self.execute(shlex.split(cmd), output)
 
     def vid(self, vm):
-        "Vpcs[?State=='available'].VpcId | [0]"
+        return "Vpcs[?State=='available'].VpcId | [0]"
+
+    def gw_name(self, vnet):
+        return 'gw-' + vnet.name
+
+    def gw_id(self, vnet, throw=False):
+        return self.get_id(vnet, 'gw', throw)
 
     def start_virtual_machine(self, vm):
         # aws ec2 start-instances --instance-ids <the instance id you get from the output of run-instances>
@@ -108,6 +115,9 @@ class AwsCloud(Cloud):
         # the hostname of AWS VMs are not directly from the name you gave it.
         # check the name from "aws ec3 describe-instances"
         output = {}
+        if vm.name in self.addresses:
+            return self.addresses[vm.name]
+
         while True:
             with self.lock:
                 self.to_location_of(vm)
@@ -117,7 +127,9 @@ class AwsCloud(Cloud):
                 self.execute(cmd, output)
 
             if output['stdout'].strip():
-                return output['stdout'].strip().replace('"', '')
+                ip = output['stdout'].strip().replace('"', '')
+                self.addresses[vm.name] = ip
+                return ip
 
             time.sleep(5)
 
@@ -188,6 +200,7 @@ class AwsCloud(Cloud):
 
 
     def create_security_group(self, ep):
+        return True
         # you can manually create a security group on web portal and always use the security group id when you create VMs.
         with self.lock:
 
@@ -199,10 +212,10 @@ class AwsCloud(Cloud):
                     self.setup_security_group(sg, self.location_of(vm))
                     sg_ids.append(self.sg_id(sg, self.location_of(vm)))
 
-                cmd = ['aws', 'ec2', 'modify-instance-attribute',
-                       '--groups', ','.join(sg_ids), '--instance-id',
-                       self.vm_id(vm)]
-                self.execute(cmd)
+                # cmd = ['aws', 'ec2', 'modify-instance-attribute',
+                #        '--groups', ' '.join(sg_ids), '--instance-id',
+                #        self.vm_id(vm)]
+                # self.execute(cmd)
 
             return True
 
@@ -217,10 +230,15 @@ class AwsCloud(Cloud):
             self.to_location_of(vm)
             output = {}
 
-            ret = self.exe('run-instances --image-id {0} --count 1 \
-            --instance-type {1} --key-name=cloud --security-groups {2} \
-            --query "Instances[0].InstanceId"'.format(
-                vm.image, vm.type, self.sg_for_loc(vm)),
+            subnet_id = '--security-groups {0}'.format(self.sg_for_loc(vm))
+            if vm.virtual_network():
+                subnet_id = '--subnet-id=%s' % self.data[self.subnet_name(vm.virtual_network())]
+
+            ret = self.exe('run-instances --image-id %s --count 1 \
+                    --instance-type %s --key-name=cloud %s\
+                    --block-device-mappings \
+                    "[{\\"DeviceName\\": \\"/dev/sda1\\",\\"Ebs\\":{\\"VolumeSize\\":100}}]"\
+            --query "Instances[0].InstanceId"'% (vm.image, vm.type, subnet_id),
                 output)
             if ret:
                     self.data[self.vm_name(vm)] = output['stdout'].strip()
@@ -232,6 +250,9 @@ class AwsCloud(Cloud):
 
     def subnet_name(self, vnet):
         return self.vnet_name(vnet) + '-subnet'
+
+    def subnet_id(self, vnet, throw=False):
+        return self.get_id(vnet, 'subnet', throw)
 
     def vnet_id(self, vnet, throw=False):
         """ Return the ID of the VM """
@@ -260,11 +281,10 @@ class AwsCloud(Cloud):
 
     def create_virtual_network(self, vnet):
         # aws ec2 create-subnet --vpc-id <value> --cidr-block <IP prefix with "/">.
-
         with self.lock:
             self.to_location_of(vnet)
             output = {}
-            if self.vnet_id(vnet) is None:
+            if self.vnet_id(vnet) is not None:
                 return True
 
             cidr_block = vnet.address_range
@@ -280,10 +300,31 @@ class AwsCloud(Cloud):
                     --query "Subnet.SubnetId"'.format(vid,
                         vnet.address_range), output):
                 raise Exception("Failed to create the subnet")
-            self.data[self.subnet_name(vnet) + '-subnet'] = output['stdout'].strip()
+            subnet_id = output['stdout'].strip()
+            self.exe('modify-subnet-attribute --subnet-id=%s --map-public-ip-on-launch' % subnet_id)
+            self.data[self.subnet_name(vnet)] = subnet_id
+
+            # Setup the security group rules
+            self.exe('describe-security-groups --filter="Name=vpc-id,Values={0}" --query="SecurityGroups[0].GroupId"'.format(vid), output)
+            sg_id = output['stdout'].strip().replace('"', '')
+            self.exe('authorize-security-group-ingress --protocol=-1 --group-id={0} --cidr=0.0.0.0/0'.format(sg_id))
+
+            # Create an attach an internet gateway
+            output = {}
+            self.exe('create-internet-gateway --query \'InternetGateway.InternetGatewayId\'', output)
+            gw_id = output['stdout'].strip().replace('"', '')
+            self.data[self.gw_name(vnet)] = gw_id
+
+            self.exe('attach-internet-gateway --internet-gateway-id {1} --vpc-id {0}'.format(self.vnet_id(vnet), gw_id))
+
+            # Setup the default route to the gateway
+            self.exe('describe-route-tables --filter "Name=vpc-id,Values={0}" --query \'RouteTables[0].RouteTableId\''.format(self.vnet_id(vnet)),output) 
+            rtb_id = output['stdout'].strip().replace('"', '')
+            self.exe('create-route --route-table-id {0} --destination-cidr-block 0.0.0.0/0 --gateway-id {1}'.format(rtb_id, gw_id))
             return True
 
     def delete_security_group(self, group):
+        return True
         with self.lock:
             for vm in group.virtual_machines():
                 loc = self.location_of(vm)
@@ -322,11 +363,15 @@ class AwsCloud(Cloud):
                 return True
 
             self.to_location_of(vnet)
-            ret = self.exe('aws ec2 delete-vpc --vpc-id {0}'.format(self.vnet_id(vnet, throw=True)))
+            ret = self.exe('detach-internet-gateway --internet-gateway-id {0} --vpc-id {1}'.format(self.gw_id(vnet, throw=False), self.vnet_id(vnet, throw=False)))
+            ret = self.exe('delete-internet-gateway --internet-gateway-id {0}'.format(self.gw_id(vnet, throw=False)))
+            ret = self.exe('delete-subnet --subnet-id {0}'.format(self.subnet_id(vnet, throw=False)))
+            ret = self.exe('delete-vpc --vpc-id {0}'.format(self.vnet_id(vnet, throw=False)))
             if ret:
                 del self.data[self.vnet_name(vnet)]
                 del self.data[self.subnet_name(vnet)]
-            return ret
+                del self.data[self.gw_name(vnet)]
+            return True
 
     def delete_location(self, group):
         # aws ec2 delete-security-group
