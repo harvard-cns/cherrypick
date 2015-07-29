@@ -219,6 +219,11 @@ class AwsCloud(Cloud):
 
             return True
 
+    def availability_zone_of_subnet(self, subnet_id):
+        output = {}
+        self.exe('describe-subnets --filter Name=subnet-id,Values=%s --query=Subnets[0].AvailabilityZone' % subnet_id, output)
+        return output['stdout'].strip().replace('"', '')
+
     def create_virtual_machine(self, vm):
         
         # aws ec2 run-instances --image-id ami-5189a661 --count 1 --instance-type t2.micro --key-name CloudBench --subnet-id subnet-155fe170
@@ -230,16 +235,20 @@ class AwsCloud(Cloud):
             self.to_location_of(vm)
             output = {}
 
-            subnet_id = '--security-groups {0}'.format(self.sg_for_loc(vm))
+            net_cmd = '--security-groups {0}'.format(self.sg_for_loc(vm))
             if vm.virtual_network():
-                subnet_id = '--subnet-id=%s' % self.data[self.subnet_name(vm.virtual_network())]
+                subnet_id = self.data[self.subnet_name(vm.virtual_network())]
+                net_cmd = '--subnet-id=%s' % subnet_id
+                if 'placement_group' in vm.virtual_network():
+                    net_cmd = net_cmd + ' --placement AvailabilityZone=%s,GroupName=%s,Tenancy=default' % (self.availability_zone_of_subnet(subnet_id), self.pg_name(vm.virtual_network()))
 
             ret = self.exe('run-instances --image-id %s --count 1 \
                     --instance-type %s --key-name=cloud %s\
                     --block-device-mappings \
                     "[{\\"DeviceName\\": \\"/dev/sda1\\",\\"Ebs\\":{\\"VolumeSize\\":100}}]"\
-            --query "Instances[0].InstanceId"'% (vm.image, vm.type, subnet_id),
+            --query "Instances[0].InstanceId"'% (vm.image, vm.type, net_cmd),
                 output)
+
             if ret:
                     self.data[self.vm_name(vm)] = output['stdout'].strip()
             return ret
@@ -253,6 +262,10 @@ class AwsCloud(Cloud):
 
     def subnet_id(self, vnet, throw=False):
         return self.get_id(vnet, 'subnet', throw)
+
+    def pg_name(self, vnet):
+        """ Return the name of the placement group for our Virtual Network """
+        return 'pg-' + vnet.name
 
     def vnet_id(self, vnet, throw=False):
         """ Return the ID of the VM """
@@ -321,6 +334,11 @@ class AwsCloud(Cloud):
             self.exe('describe-route-tables --filter "Name=vpc-id,Values={0}" --query \'RouteTables[0].RouteTableId\''.format(self.vnet_id(vnet)),output) 
             rtb_id = output['stdout'].strip().replace('"', '')
             self.exe('create-route --route-table-id {0} --destination-cidr-block 0.0.0.0/0 --gateway-id {1}'.format(rtb_id, gw_id))
+
+
+            # Setup the placement group if one is asked
+            if 'placement_group' in vnet:
+                self.exe('create-placement-group --group-name %s --strategy cluster' % self.pg_name(vnet), output)
             return True
 
     def delete_security_group(self, group):
@@ -363,6 +381,9 @@ class AwsCloud(Cloud):
                 return True
 
             self.to_location_of(vnet)
+            if 'placement_group' in vnet:
+                self.exe('delete-placement-group --group-name %s' % self.pg_name(vnet))
+
             ret = self.exe('detach-internet-gateway --internet-gateway-id {0} --vpc-id {1}'.format(self.gw_id(vnet, throw=False), self.vnet_id(vnet, throw=False)))
             ret = self.exe('delete-internet-gateway --internet-gateway-id {0}'.format(self.gw_id(vnet, throw=False)))
             ret = self.exe('delete-subnet --subnet-id {0}'.format(self.subnet_id(vnet, throw=False)))

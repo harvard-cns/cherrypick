@@ -127,6 +127,9 @@ class EntityModel(object):
     def extend(self, _config):
         self.config.update(_config)
 
+    def __contains__(self, name):
+        name = inflection.dasherize(name)
+        return name in self.config
 
     def __getattr__(self, name):
         name = inflection.dasherize(name)

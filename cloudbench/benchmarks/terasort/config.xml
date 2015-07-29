@@ -23,7 +23,7 @@
     <azure>
         <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
         <config name='size'   value='Large' />
-        <config name='us'   value='West US' />
+        <config name='us'   value='East US' />
 
         <locations>
             <add-values name='us' storage-type='LRS' /> 
@@ -35,11 +35,11 @@
 
     <aws>
         <config name='ubuntu' value='ami-bf3dccfb' />
-        <config name='size'   value='m4.large' />
+        <config name='size'   value='t2.medium' />
         <config name='us'   value='us-west-1' />
 
         <virtual-networks>
-            <add-values name='vn1' address-range='10.0.0.0/20' />
+            <add-values name='vn1' address-range='10.0.0.0/20'/>
         </virtual-networks>
     </aws>
 
