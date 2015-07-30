@@ -130,8 +130,8 @@ class HadoopCluster(Cluster):
   <value>-Xmx{4}m</value>
 </property>
 """
-        map_size = bytes2mega(vm.memory()) / (vm.cpus() * 2)
-        red_size = bytes2mega(vm.memory()) / (vm.cpus() * 1)
+        map_size = int(bytes2mega(vm.memory() - 1024) / (vm.cpus() * 2))
+        red_size = int(bytes2mega(vm.memory() - 1024) / (vm.cpus() * 1))
         
         map_heap_size = map_size * 3 / 4
         red_heap_size = red_size * 3 / 4
@@ -156,7 +156,7 @@ class HadoopCluster(Cluster):
         config = """
 <property>
  <name>dfs.replication</name>
- <value>3</value>
+ <value>1</value>
  <description>Default block replication.
   The actual number of replications can be specified when the file is created.
   The default is used if replication is not specified in create time.
@@ -224,6 +224,7 @@ class HadoopCluster(Cluster):
 """
         total_mem_size = bytes2mega(vm.memory()) - 1024
         min_mem_size   = total_mem_size / (vm.cpus()*3)
+        min_mem_size   = total_mem_size / (vm.cpus())
 
         config = YarnSiteTemplate.format(
                 config.format(self.master.name, total_mem_size, min_mem_size)) 

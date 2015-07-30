@@ -23,10 +23,10 @@ def terasort_test(vms, env):
     cluster.restart_dfs()
     cluster.restart_yarn()
 
-    output = cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar teragen -Dmapred.map.tasks=200 100000000 {0}"'.format(TERASORT_INPUT))
+    output = cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar teragen -Dmapred.map.tasks=50 100000000 {0}"'.format(TERASORT_INPUT))
     teragen_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
 
-    cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar terasort -Dmapred.reduce.tasks=100 {0} {1} 2>&1"'.format(TERASORT_INPUT, TERASORT_OUTPUT))
+    cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar terasort -Dmapred.reduce.tasks=25 {0} {1} 2>&1"'.format(TERASORT_INPUT, TERASORT_OUTPUT))
     terasort_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
 
     with open(str(time.time())+'-'+cluster.master.type, 'w+') as f:
