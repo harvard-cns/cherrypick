@@ -32,7 +32,7 @@ class GcloudCloud(Cloud):
         vnets = set()
         for vm in sg.virtual_machines():
             if vm.virtual_network():
-                vnets.add(vm.virtual_network().name)
+                vnets.add(self.unique(vm.virtual_network().name))
             else:
                 vnets.add('default')
         return vnets
@@ -40,7 +40,7 @@ class GcloudCloud(Cloud):
     def get_virtual_machine_parameter(self, vm, key):
         output = {}
         ret = self.exe("instances describe {0} --zone {1}".format(
-            vm.name, vm.location().location), output)
+            self.unique(vm.name), vm.location().location), output)
 
         for line in output['stdout'].split("\n"):
             if line.strip().startswith(key):
@@ -51,11 +51,11 @@ class GcloudCloud(Cloud):
     def start_virtual_machine(self, vm):
         #gcloud compute instances start omid --zone [LOCATION]
         return self.exe("instances start {0} --zone {1}".format(
-            vm.name, vm.location().location))
+            self.unique(vm.name), vm.location().location))
 
     def stop_virtual_machine(self, vm):
         return self.exe("instances stop {0} --zone {1}".format(
-            vm.name, vm.location().location))
+            self.unique(vm.name), vm.location().location))
 
     def status_virtual_machine(self, vm):
         status = self.get_virtual_machine_parameter(vm, 'status')
@@ -83,17 +83,17 @@ class GcloudCloud(Cloud):
 
         for vnet in vnets:
             ret = ret and self.exe("firewall-rules create {0} --network {1} --allow {2}".format(
-                        ep.name+'-'+vnet, vnet,
+                        self.unique(ep.name)+'-'+vnet, vnet,
                         ep.protocol + ':' + ep.public_port))
         return ret
 
     def create_virtual_machine(self, vm):
         # gcloud compute instances create [NAME] --zone [ZONE/Location] --machine-type [TYPE] --image [IMAGE] --network [NETWORK]
         cmd = "instances create {0} --zone {1} --machine-type {2} --image {3} --metadata-from-file sshKeys={4}".format(
-              vm.name, vm.location().location, vm.type, vm.image, constants.DEFAULT_GCLOUD_PUBLIC_KEY)
+              self.unique(vm.name), vm.location().location, vm.type, vm.image, constants.DEFAULT_GCLOUD_PUBLIC_KEY)
 
         if vm.virtual_network():
-            cmd += ' --network {0}'.format(vm.virtual_network().name)
+            cmd += ' --network {0}'.format(self.unique(vm.virtual_network().name))
 
         self.exe(cmd)
         return True
@@ -103,9 +103,9 @@ class GcloudCloud(Cloud):
         # gcloud compute firewall-rules create [NAME] --network [NAME] --source-ranges [RANGE] --allow [protocols]
         ret = self.exe(
             "networks create {0} --range {1}".format(
-                vnet.name, vnet.address_range))
+                self.unique(vnet.name), vnet.address_range))
         self.exe("firewall-rules create {0} --network {1} --allow {2}".format(
-            'ssh-' + vnet.name, vnet.name, 'tcp:22'))
+            'ssh-' + self.unique(vnet.name), self.unique(vnet.name), 'tcp:22'))
         return True
 
 
@@ -116,16 +116,17 @@ class GcloudCloud(Cloud):
         ret = True
         for vnet in vnets:
             ret = ret and self.exe("firewall-rules delete {0} -q".format(
-                        ep.name+'-'+vnet))
+                        self.unique(ep.name)+'-'+vnet))
         return True
 
     def delete_virtual_machine(self, vm):
         # gcloud compute instances delete [NAME] --zone [ZONE] -q
         return self.exe("instances delete {0} --zone {1} -q".format(
-            vm.name, vm.location().location))
+            self.unique(vm.name), vm.location().location))
 
     def delete_virtual_network(self, vnet):
-        return self.exe('networks delete {0} -q'.format(vnet.name))
+        self.exe("firewall-rules delete {0} -q".format('ssh-' + self.unique(vnet.name)))
+        return self.exe('networks delete {0} -q'.format(self.unique(vnet.name)))
 
     def delete_location(self, group):
         # Do nothing?

@@ -115,6 +115,7 @@ class AwsCloud(Cloud):
         # the hostname of AWS VMs are not directly from the name you gave it.
         # check the name from "aws ec3 describe-instances"
         output = {}
+        print self.addresses
         if vm.name in self.addresses:
             return self.addresses[vm.name]
 

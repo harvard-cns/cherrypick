@@ -62,6 +62,9 @@ def main():
     parser.add_argument('--test', action='store_true',
         default=False, help='Do not run anything, just print out the sequence of commands')
 
+    parser.add_argument('--storage-name',
+        help='Name of the storage to save the data.  For Azure, this is the name of the table that the data will be saved.')
+
     parser.add_argument('--benchmark',
         help='Name of the benchmark that will be executed')
 
@@ -91,7 +94,8 @@ def main():
     env = Env(args.cloud,
               BENCHMARK_PATH + args.benchmark + "/config.xml",
               args.benchmark,
-              args.storage)
+              args.storage,
+              args.storage_name)
 
     if args.test:
         env.test(True)

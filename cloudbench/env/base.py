@@ -76,7 +76,7 @@ class Benchmark(object):
         return self._executor
 
 class Env(object):
-    def __init__(self, cloud, f, benchmark, storage):
+    def __init__(self, cloud, f, benchmark, storage, table_name=''):
         self._cloud = cloud
         self._file = f
         self._config = None
@@ -84,6 +84,7 @@ class Env(object):
         self._storage = storage
         self._uuid = 'cb'
         self._test = False
+        self._table_name = table_name
 
         self._benchmark = Benchmark(benchmark, 
                 os.path.abspath(os.path.join(self._file, os.pardir)),
@@ -94,6 +95,10 @@ class Env(object):
 
     def is_test(self):
         return self._test
+
+    @property
+    def table_name(self):
+        return self._table_name
 
     @property
     def config(self):

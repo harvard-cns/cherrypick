@@ -11,9 +11,13 @@ class BaseStorage(object):
         self.timestamp()
 
     def timestamp(self):
-        if (self._delta is None):
-            resp = self._client.request('pool.ntp.org').tx_timestamp
-            self._delta = time() - float(resp)
+        try:
+            if (self._delta is None):
+                resp = self._client.request('pool.ntp.org').tx_timestamp
+                self._delta = time() - float(resp)
+        except Exception:
+            # Just try again
+            return self.timestamp()
 
         return str(int((time() - self._delta)*100)).zfill(14)
 

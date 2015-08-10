@@ -21,7 +21,7 @@ class AzureStorage(BaseStorage):
         self._ts.create_table(self.table_name())
 
     def table_name(self):
-        return self._env.benchmark.name + 'new'
+        return self._env.table_name
 
     def save(self, dic, partition=None, key=''):
         dic['RowKey'] = str(self.reverse_timestamp())
