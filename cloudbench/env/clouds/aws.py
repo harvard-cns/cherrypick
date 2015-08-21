@@ -266,7 +266,7 @@ class AwsCloud(Cloud):
 
     def pg_name(self, vnet):
         """ Return the name of the placement group for our Virtual Network """
-        return 'pg-' + vnet.name
+        return self.unique('pg-' + vnet.name)
 
     def vnet_id(self, vnet, throw=False):
         """ Return the ID of the VM """

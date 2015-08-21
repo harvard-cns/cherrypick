@@ -5,7 +5,7 @@ from cloudbench.apps.coremark import COREMARK_PATH, COREMARK_FILE, COREMARK_REMO
 import re
 
 
-TIMEOUT=300
+TIMEOUT=3600
 
 def coremark(vm, env):
     output = {}
@@ -43,7 +43,11 @@ def coremark_mp(vm, env):
 
 def coremark_test(vms, env):
     vm = vms[0]
+
+    # Install the new kernel
+    vm.install('kernel4')
     vm.install('coremark')
+
     results = coremark(vm, env)
     print results
     results = coremark_mp(vm, env)

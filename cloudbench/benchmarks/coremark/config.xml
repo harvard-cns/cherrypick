@@ -19,7 +19,7 @@
 
     <aws>
         <config name='ubuntu' value='ami-bf3dccfb' />
-        <config name='size'   value='Small' />
+        <config name='size'   value='t2.small' />
         <config name='us'   value='us-west-1' />
     </aws>
 
