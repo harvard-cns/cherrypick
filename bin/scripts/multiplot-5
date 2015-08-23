@@ -1,0 +1,34 @@
+set terminal 'png'
+#set output 'omid.png'
+set datafile separator ","
+
+set tmargin 0
+set bmargin 0
+set lmargin 3
+set rmargin 3
+
+set style line 1 lc rgb '#0060ad' lt 1 lw 1 pt 7 ps 0.5   # --- blue
+set style line 2 lc rgb '#dd181f' lt 1 lw 1 pt 5 ps 0.5   # --- red
+set style line 3 lc rgb '#ff9f52' lt 1 lw 1 pt 4 ps 0.5   # --- brown
+set style line 4 lc rgb '#00ada4' lt 1 lw 1 pt 3 ps 0.5   # --- cyan
+set style line 5 lc rgb '#84ad06' lt 1 lw 1 pt 2 ps 0.5   # --- green
+
+unset xlabel
+unset xtics
+unset ytics
+
+set multiplot layout 6,1
+
+ntics = 4.
+
+plot row1 every ::1 using 2   with lines ls 1 title title1
+plot row2 every ::1 using 2   with lines ls 2 title title2
+plot row3 every ::1 using 2   with lines ls 3 title title3
+plot row4 every ::1 using 2   with lines ls 4 title title4
+
+
+stats row5 using 1 prefix "R5"
+set xtics nomirror
+plot row5 every ::1 using (($1-R5_min)/1000000.0):2 with lines ls 5 title title5
+
+unset multiplot
