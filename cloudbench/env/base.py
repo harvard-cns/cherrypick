@@ -76,7 +76,7 @@ class Benchmark(object):
         return self._executor
 
 class Env(object):
-    def __init__(self, cloud, f, benchmark, storage, table_name=''):
+    def __init__(self, cloud, f, benchmark, storage, table_name='', params=''):
         self._cloud = cloud
         self._file = f
         self._config = None
@@ -85,10 +85,29 @@ class Env(object):
         self._uuid = 'cb'
         self._test = False
         self._table_name = table_name
+        self._params = {}
+        self._parse_params(params)
 
         self._benchmark = Benchmark(benchmark, 
                 os.path.abspath(os.path.join(self._file, os.pardir)),
                 self)
+
+    def _parse_params(self, params):
+        self._params = {}
+        keyvals = params.split(",")
+        for keyval in keyvals:
+            if not keyval.strip(): continue
+            try:
+                key, val = keyval.split("=")
+                self._params[key] = val
+            except Exception:
+                print "Could not parse %s" % keyval
+
+    def param(self, name):
+        if name in self._params:
+            return self._params[name]
+
+        return None
 
     def test(self, val):
         self._test = not (not val)

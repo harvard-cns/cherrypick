@@ -13,8 +13,8 @@ TERASORT_INPUT='/home/{0}/terasort-input'.format(HADOOP_USER)
 TERASORT_OUTPUT='/home/{0}/terasort-output'.format(HADOOP_USER)
 
 
-def terasort_test(vms, env):
-    parallel(lambda vm: vm.install('kernel4'), vms)
+def terasort_run(vms, env):
+    # parallel(lambda vm: vm.install('kernel4'), vms)
     parallel(lambda vm: vm.install('hadoop'), vms)
     parallel(lambda vm: vm.install('ntp'), vms)
     parallel(lambda vm: vm.install('argos'), vms)
@@ -28,14 +28,14 @@ def terasort_test(vms, env):
     cluster.restart_dfs()
     cluster.restart_yarn()
 
-    output = cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar teragen -Dmapred.map.tasks=50 100000000 {0}"'.format(TERASORT_INPUT))
+    output = cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar teragen -Dmapred.map.tasks={1} {2} {0}"'.format(TERASORT_INPUT, env.param('terasort:mappers'), env.param('terasort:rows')))
     teragen_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
 
     parallel(lambda vm: vm.script('rm -rf ~/argos/proc'), vms)
     parallel(lambda vm: vm.script('cd argos; sudo nohup src/argos >argos.out 2>&1 &'), vms)
     time.sleep(2)
 
-    cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar terasort -Dmapred.reduce.tasks=25 {0} {1} 2>&1"'.format(TERASORT_INPUT, TERASORT_OUTPUT))
+    cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar terasort -Dmapred.reduce.tasks={2} {0} {1} 2>&1"'.format(TERASORT_INPUT, TERASORT_OUTPUT, env.param('terasort:reducers')))
     terasort_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
 
     parallel(lambda vm: vm.script('sudo killall -SIGINT argos'), vms)
@@ -48,11 +48,8 @@ def terasort_test(vms, env):
         f.write(str(teragen_time) + "," + str(terasort_time))
 
 def run(env):
-    vms = []
-    for i in range(1, 4):
-        vms.append(env.vm('vm'+str(i)))
-
-    env.benchmark.executor(vms, terasort_test)
+    vms = env.virtual_machines().values()
+    env.benchmark.executor(vms, terasort_run)
     env.benchmark.executor.run()
     #env.benchmark.executor.stop()
 

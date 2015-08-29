@@ -71,6 +71,9 @@ def main():
     parser.add_argument('-l', '--list', action='store_true',
         default=False, help='List all the benchmarks')
 
+    parser.add_argument('--params', help='parameters to pass to the benchmark',
+            default='')
+
     parser.add_argument('--storage',
         default='azure', help='Storage to save the benchmark data.')
 
@@ -95,7 +98,8 @@ def main():
               BENCHMARK_PATH + args.benchmark + "/config.xml",
               args.benchmark,
               args.storage,
-              args.storage_name)
+              args.storage_name,
+              args.params)
 
     if args.test:
         env.test(True)
