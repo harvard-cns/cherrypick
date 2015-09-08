@@ -94,6 +94,7 @@ def main():
 
     mod = __import__('cloudbench.benchmarks.' + args.benchmark + '.main',
                      fromlist=['cloudbench.benchmarks.' + args.benchmark])
+
     env = Env(args.cloud,
               BENCHMARK_PATH + args.benchmark + "/config.xml",
               args.benchmark,

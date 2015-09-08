@@ -42,10 +42,10 @@ class Command(object):
             fl = fcntl.fcntl(fd, fcntl.F_GETFL)
             fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
-        def run_cmd(ssh, command):
+        def run_cmd(ssh, command, private_key = constants.DEFAULT_VM_PRIVATE_KEY):
             global COUNT
             cmd = "ssh -i {} -q -o StrictHostKeyChecking=no "\
-                   "{} -- {}".format(constants.DEFAULT_VM_PRIVATE_KEY,
+                   "{} -- {}".format(private_key,
                    ssh.connect_string, command)
             Debug.cmd << cmd << "\n"
 

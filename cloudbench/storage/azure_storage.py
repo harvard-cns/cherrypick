@@ -1,5 +1,5 @@
 from .base_storage import BaseStorage
-from azure.storage import TableService, Entity
+from azure.storage.table import TableService, Entity
 from cloudbench.util import Config, Debug
 
 import sys

@@ -1,5 +1,5 @@
 from cloudbench.env.config.xml_config import EnvXmlConfig
-from cloudbench.env.clouds import AzureCloud, AwsCloud, GcloudCloud
+from cloudbench.env.clouds import AzureCloud, AwsCloud, GcloudCloud, LocalCloud
 from cloudbench.executor import Executor
 from cloudbench.storage import AzureStorage, FileStorage, JsonStorage
 from cloudbench.util import parallel
@@ -33,7 +33,6 @@ class Benchmark(object):
             self._file = config_file
         else:
             self._file = os.path.join(directory, 'config.xml')
-
 
         self._storage_path = os.path.join(directory, env.cloud_name + '.json')
         self._storage = None
@@ -136,11 +135,17 @@ class Env(object):
             self._manager = AwsCloud(self)
         elif self._cloud =='gcloud':
             self._manager = GcloudCloud(self)
+        elif self._cloud =='local':
+            self._manager = LocalCloud(self)
 
         return self._manager
 
     def storage(self):
-        """ Return the storage where we save the resulting data """
+        if self._storage == 'local':
+            self._storage = JsonStorage(self)
+            return self._storage
+
+	""" Return the storage where we save the resulting data """
         if isinstance(self._storage, str):
             if self._storage == 'azure':
                 self._storage = AzureStorage(self)
