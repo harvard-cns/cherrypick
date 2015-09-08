@@ -45,7 +45,7 @@ def coremark_test(vms, env):
     vm = vms[0]
 
     # Install the new kernel
-    vm.install('kernel4')
+    #vm.install('kernel4')
     vm.install('coremark')
 
     results = coremark(vm, env)
