@@ -35,8 +35,10 @@ def terasort_run(vms, env):
     parallel(lambda vm: vm.script('cd argos; sudo nohup src/argos >argos.out 2>&1 &'), vms)
     time.sleep(2)
 
-    cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar terasort -Dmapred.reduce.tasks={2} {0} {1} 2>&1"'.format(TERASORT_INPUT, TERASORT_OUTPUT, env.param('terasort:reducers')))
+    cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar terasort -Dmapred.reduce.tasks={2} {0} {1} >output.log 2>&1"'.format(TERASORT_INPUT, TERASORT_OUTPUT, env.param('terasort:reducers')))
+
     terasort_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
+    terasort_out = cluster.master.script('sudo su - hduser -c "cat output.log"').strip()
 
     parallel(lambda vm: vm.script('sudo killall -SIGINT argos'), vms)
     time.sleep(10)
@@ -46,6 +48,9 @@ def terasort_run(vms, env):
 
     with open(str(time.time())+'-'+cluster.master.type, 'w+') as f:
         f.write(str(teragen_time) + "," + str(terasort_time))
+
+    with open(str(time.time())+'-out-'+cluster.master.type, 'w+') as f:
+        f.write(terasort_out)
 
 def run(env):
     vms = env.virtual_machines().values()
