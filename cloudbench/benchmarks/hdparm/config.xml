@@ -1,0 +1,37 @@
+<config>
+    <locations>
+        <location name='us' location='config:us'/>
+    </locations>
+
+    <virtual-machines>
+        <virtual-machine name='vm1' image='config:ubuntu' type='config:size' location='us' storage-type='global:storage-type' />
+    </virtual-machines>
+
+    <azure>
+        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-15_04-amd64-server-20150528.1-en-us-30GB' />
+        <config name='size'   value='Small' />
+        <config name='us'   value='West US' />
+
+        <locations>
+            <add-values name='us' storage-type='LRS' /> 
+        </locations>
+    </azure>
+
+    <aws>
+        <config name='ubuntu' value='ami-bf3dccfb' />
+        <config name='size'   value='t2.small' />
+        <config name='us'   value='us-west-1' />
+    </aws>
+
+    <gcloud>
+        <config name='ubuntu' value='ubuntu-14-04' />
+        <config name='size'   value='n1-standard-4' />
+        <config name='us'   value='us-central1-a' />
+    </gcloud>
+
+    <local>
+        <config name='ubuntu' value='ubuntu' />
+        <config name='size'   value='4cores' />
+        <config name='us'   value='local' />
+    </local>
+</config>

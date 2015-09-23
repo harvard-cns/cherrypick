@@ -141,11 +141,11 @@ class Env(object):
         return self._manager
 
     def storage(self):
+	""" Return the storage where we save the resulting data """
         if self._storage == 'local':
             self._storage = JsonStorage(self)
             return self._storage
 
-	""" Return the storage where we save the resulting data """
         if isinstance(self._storage, str):
             if self._storage == 'azure':
                 self._storage = AzureStorage(self)

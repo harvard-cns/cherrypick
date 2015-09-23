@@ -94,6 +94,9 @@ class EnvConfig(object):
         if str(value).startswith('config:'):
             return self.config(value[7:])
 
+        if str(value).startswith('global:'):
+            return self.env.param(value[7:])
+
         return value
 
     def entities(self):

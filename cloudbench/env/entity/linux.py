@@ -24,6 +24,9 @@ class Linux(RsyncTransfer, SecureShell, LinuxInstaller, LinuxFileSystem):
             self._cpus = int(self.script("nproc"))
         return self._cpus
 
+    def root_disk(self):
+        return self.script("df -P / | tail -n 1 | awk '/.*/ { print $1 }'")
+
 class Ubuntu(Linux):
     def __init__(self, *args, **kwargs):
         super(Ubuntu, self).__init__(*args, **kwargs)

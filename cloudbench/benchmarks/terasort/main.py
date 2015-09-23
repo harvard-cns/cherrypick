@@ -27,6 +27,7 @@ def terasort_run(vms, env):
     cluster.format_hdfs()
     cluster.restart_dfs()
     cluster.restart_yarn()
+    cluster.restart_job_history()
 
     output = cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar teragen -Dmapred.map.tasks={1} {2} {0}"'.format(TERASORT_INPUT, env.param('terasort:mappers'), env.param('terasort:rows')))
     teragen_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
@@ -41,15 +42,18 @@ def terasort_run(vms, env):
     terasort_out = cluster.master.script('sudo su - hduser -c "cat output.log"').strip()
 
     parallel(lambda vm: vm.script('sudo killall -SIGINT argos'), vms)
-    time.sleep(10)
+    time.sleep(30)
     parallel(lambda vm: vm.script('chmod -R 777 ~/argos/proc'), vms)
     parallel(lambda vm: vm.recv('~/argos/proc', vm.name + '-proc'), vms)
     parallel(lambda vm: vm.recv('~/argos/argos.out', vm.name + '-argos.out'), vms)
 
-    with open(str(time.time())+'-'+cluster.master.type, 'w+') as f:
+
+    file_name = str(time.time()) + '-' + cluster.master.type
+
+    with open(file_name + ".time", 'w+') as f:
         f.write(str(teragen_time) + "," + str(terasort_time))
 
-    with open(str(time.time())+'-out-'+cluster.master.type, 'w+') as f:
+    with open(file_name + ".out", 'w+') as f:
         f.write(terasort_out)
 
 def run(env):

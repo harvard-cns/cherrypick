@@ -240,7 +240,7 @@ class AwsCloud(Cloud):
             if vm.virtual_network():
                 subnet_id = self.data[self.subnet_name(vm.virtual_network())]
                 net_cmd = '--subnet-id=%s' % subnet_id
-                if 'placement_group' in vm.virtual_network():
+                if 'placement_group' in vm.virtual_network() and (vm.virtual_network().placement_group == "true"):
                     net_cmd = net_cmd + ' --placement AvailabilityZone=%s,GroupName=%s,Tenancy=default' % (self.availability_zone_of_subnet(subnet_id), self.pg_name(vm.virtual_network()))
 
             ret = ''
@@ -351,7 +351,7 @@ class AwsCloud(Cloud):
 
 
             # Setup the placement group if one is asked
-            if 'placement_group' in vnet:
+            if 'placement_group' in vnet and (vnet.placement_group == "true"):
                 self.exe('create-placement-group --group-name %s --strategy cluster' % self.pg_name(vnet), output)
             return True
 
@@ -395,7 +395,7 @@ class AwsCloud(Cloud):
                 return True
 
             self.to_location_of(vnet)
-            if 'placement_group' in vnet:
+            if 'placement_group' in vnet and (vnet.placement_group == "true"):
                 self.exe('delete-placement-group --group-name %s' % self.pg_name(vnet))
 
             ret = self.exe('detach-internet-gateway --internet-gateway-id {0} --vpc-id {1}'.format(self.gw_id(vnet, throw=False), self.vnet_id(vnet, throw=False)))

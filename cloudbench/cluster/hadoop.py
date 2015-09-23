@@ -101,6 +101,22 @@ class HadoopCluster(Cluster):
     def mapred_config(self, vm):
         config = """
 <property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>0.0.0.0:19888</value>
+</property>
+<property>
+    <name>mapreduce.jobhistory.address</name>
+    <value>0.0.0.0:10020</value>
+</property>
+<property>
+    <name>mapreduce.jobhistory.intermediate-done-dir</name>
+    <value>/home/hduser/mr-history/tmp</value>
+</property>
+<property>
+    <name>mapreduce.jobhistory.done-dir</name>
+    <value>/home/hduser/mr-history/done</value>
+</property>
+<property>
  <name>mapreduce.jobtracker.address</name>
  <value>{0}:54311</value>
  <description>The host and port that the MapReduce job tracker runs
@@ -265,6 +281,18 @@ class HadoopCluster(Cluster):
 
     def hadoop_user_cmd(self, cmd):
         return 'sudo su - {0} -c {1}'.format(HADOOP_USER, cmd)
+
+    def start_job_history(self):
+        start_jh = self.hadoop_user_cmd('"mr-jobhistory-daemon.sh start historyserver"')
+        parallel(lambda vm: vm.script(start_jh), self.all_nodes())
+
+    def stop_job_history(self):
+        stop_jh = self.hadoop_user_cmd('"mr-jobhistory-daemon.sh stop historyserver"')
+        parallel(lambda vm: vm.script(stop_jh), self.all_nodes())
+
+    def restart_job_history(self):
+        self.stop_job_history()
+        self.start_job_history()
 
     def start_dfs(self):
         self.master.script(

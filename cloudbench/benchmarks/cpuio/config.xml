@@ -1,0 +1,28 @@
+<config>
+        <!-- Used to put VMs together -->
+    <locations>
+        <location name='westus'  location='config:westus' />
+    </locations>
+
+    <security-groups>
+    </security-groups>
+
+    <virtual-networks>
+        <virtual-network name='vnwestus'  location='westus' />
+    </virtual-networks>
+
+    <virtual-machines>
+        <virtual-machine name='vm1'  virtual-network='vnwestus'
+            image='config:imagewestus' type='global:instance-type'
+            location='westus' storage-type='global:storage-type' />
+    </virtual-machines>
+
+    <aws>
+        <config name='imagewestus' value='ami-bf3dccfb' />
+        <config name='westus' value='us-west-1' />
+
+        <virtual-networks>
+            <add-values name='vnwestus' address-range='10.0.0.0/20' />
+        </virtual-networks>
+    </aws>
+</config>
