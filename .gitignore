@@ -16,3 +16,10 @@ gcloud.json
 
 # Coverage test
 .coverage
+
+# Ignore everything in the bin folder
+bin/
+
+!bin/cb
+!bin/execute.sh
+!bin/*-*.sh

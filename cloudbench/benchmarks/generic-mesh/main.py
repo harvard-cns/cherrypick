@@ -5,8 +5,6 @@ from multiprocessing.pool import ThreadPool
 from cloudbench.benchmarks.iperf.main import iperf, iperf_vnet
 from cloudbench.benchmarks.hping.main import hping, hping_vnet
 from cloudbench.benchmarks.io.main import fio
-from cloudbench.benchmarks.coremark.main import coremark, coremark_mp
-from cloudbench.benchmarks.pmbw.main import pmbw
 
 import re
 import traceback, sys
@@ -15,8 +13,6 @@ from threading import RLock
 
 # Timeout of 50 minutes
 TIMEOUT=70*60
-
-VmLock = {}
 
 def unixify(name):
     return name.lower().replace(' ', '_')
@@ -27,14 +23,11 @@ def save(env, results, benchmark, server, client):
 def install(vm):
     """ Install the required applications for the VM """
 
-    if vm.name not in VmLock:
-        VmLock[vm.name] = RLock()
-
-    with VmLock[vm.name]:
-        if not hasattr(vm, '_install'):
-            tools = ['hping3', 'iperf', 'fio', 'coremark', 'pmbw']
-            map(lambda app: vm.install(app), tools)
-            vm._install = True
+    if not hasattr(vm, '_install'):
+        vm._install = True
+        vm.script('sudo aptitude update -y')
+        for app in ['hping3', 'iperf', 'fio', 'hdparm', 'coremark', 'pmbw']:
+            vm.install(app)
 
 def inter_experiment(params):
     """ Run inter dc experiments """
@@ -171,7 +164,7 @@ def run(env):
 
     inter_dc_experiments = ['iperf', 'hping']
     intra_dc_experiments = ['iperf_vnet', 'hping', 'iperf']
-    single_dc_experiments = ['coremark', 'fio', 'pmbw', 'coremark_mp']
+    single_dc_experiments = ['coremark', 'fio', 'pmbw', 'hdparm']
 
     regions = categorize(env)
 
@@ -181,4 +174,3 @@ def run(env):
     inter_dc(regions, env, inter_dc_experiments)
 
     env.benchmark.executor.run()
-    #env.benchmark.executor.stop()

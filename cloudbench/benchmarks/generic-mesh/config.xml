@@ -1,3 +1,8 @@
+<!--
+     Amazon VM Types: t2.small, m4.large, m4.2xlarge
+     Azure  VM Types: ExtraSmall, Medium, Large
+     Google VM Types: g1.small, n1-standard-2, n1-standard-4
+-->
 <config>
         <!-- Used to put VMs together -->
     <locations>
@@ -18,19 +23,18 @@
 
     <virtual-machines>
         <!-- Group 1 -->
-        <virtual-machine name='vmwestus'      virtual-network='vnwestus'     image='config:imagewestus'     type='config:vm-type' location='gwestus'/>
-        <virtual-machine name='vmwesteurope'  virtual-network='vnwesteurope' image='config:imagewesteurope' type='config:vm-type' location='gwesteurope'/>
-        <virtual-machine name='vmjapaneast'   virtual-network='vnjapaneast'  image='config:imagejapaneast'  type='config:vm-type' location='gjapaneast'/>
+        <virtual-machine name='vmwestus'      virtual-network='vnwestus'     image='config:imagewestus'     type='global:vm-type' location='gwestus'/>
+        <virtual-machine name='vmwesteurope'  virtual-network='vnwesteurope' image='config:imagewesteurope' type='global:vm-type' location='gwesteurope'/>
+        <virtual-machine name='vmjapaneast'   virtual-network='vnjapaneast'  image='config:imagejapaneast'  type='global:vm-type' location='gjapaneast'/>
 
         <!-- Group 2 -->
-        <virtual-machine name='vm2westus'     virtual-network='vnwestus'     image='config:imagewestus'     type='config:vm-type' location='gwestus'/>
-        <virtual-machine name='vm2westeurope' virtual-network='vnwesteurope' image='config:imagewesteurope' type='config:vm-type' location='gwesteurope'/>
-        <virtual-machine name='vm2japaneast'  virtual-network='vnjapaneast'  image='config:imagejapaneast'  type='config:vm-type' location='gjapaneast'/>
+        <virtual-machine name='vm2westus'     virtual-network='vnwestus'     image='config:imagewestus'     type='global:vm-type' location='gwestus'/>
+        <virtual-machine name='vm2westeurope' virtual-network='vnwesteurope' image='config:imagewesteurope' type='global:vm-type' location='gwesteurope'/>
+        <virtual-machine name='vm2japaneast'  virtual-network='vnjapaneast'  image='config:imagejapaneast'  type='global:vm-type' location='gjapaneast'/>
     </virtual-machines>
 
     <azure>
         <config name='storage' value='LRS' />
-        <config name='vm-type' value='ExtraLarge' />
 
         <config name='imagewestus'     value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_2_LTS-amd64-server-20150309-en-us-30GB' />
         <config name='imagewesteurope' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_2_LTS-amd64-server-20150309-en-us-30GB' />
@@ -50,7 +54,6 @@
     </azure>
 
     <aws>
-        <config name='vm-type' value='m4.2xlarge' />
         <config name='vnetaddr' value='10.0.0.0/20' />
         
         <config name='imagewestus'     value='ami-bf3dccfb' />
@@ -61,15 +64,16 @@
         <config name='westeurope' value='eu-west-1'     />
         <config name='japaneast'  value='ap-northeast-1'/>
 
+        <!--
         <virtual-networks>
             <add-values name='vnwestus'     placement-group='true'/>
             <add-values name='vnwesteurope' placement-group='true'/>
             <add-values name='vnjapaneast'  placement-group='true'/>
         </virtual-networks>
+        -->
     </aws>
 
     <gcloud>
-        <config name='vm-type' value='n1-standard-8' />
         <config name='vnetaddr' value='10.0.0.0/20' />
 
         <config name='imagewestus'     value='ubuntu-14-04' />
