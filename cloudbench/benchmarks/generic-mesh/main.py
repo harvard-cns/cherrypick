@@ -2,9 +2,12 @@ from cloudbench.ssh import WaitUntilFinished, WaitForSeconds
 from cloudbench.util import Debug
 from multiprocessing.pool import ThreadPool
 
+from cloudbench.benchmarks.coremark.main import coremark, coremark_mp
 from cloudbench.benchmarks.iperf.main import iperf, iperf_vnet
+from cloudbench.benchmarks.hdparm.main import hdparm
 from cloudbench.benchmarks.hping.main import hping, hping_vnet
 from cloudbench.benchmarks.io.main import fio
+from cloudbench.benchmarks.pmbw.main import pmbw
 
 import re
 import traceback, sys

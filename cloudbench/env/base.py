@@ -116,6 +116,7 @@ class Env(object):
 
     @property
     def table_name(self):
+        print "TABLE NAME IS: %s\n\n\n\n\n\n" % self._table_name
         return self._table_name
 
     @property

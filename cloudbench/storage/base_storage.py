@@ -13,9 +13,10 @@ class BaseStorage(object):
     def timestamp(self):
         try:
             if (self._delta is None):
-                resp = self._client.request('pool.ntp.org').tx_timestamp
+                resp = self._client.request('0.pool.ntp.org').tx_timestamp
                 self._delta = time() - float(resp)
-        except Exception:
+        except Exception as e:
+            print e
             # Just try again
             return self.timestamp()
 

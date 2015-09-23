@@ -243,25 +243,18 @@ class AwsCloud(Cloud):
                 if 'placement_group' in vm.virtual_network() and (vm.virtual_network().placement_group == "true"):
                     net_cmd = net_cmd + ' --placement AvailabilityZone=%s,GroupName=%s,Tenancy=default' % (self.availability_zone_of_subnet(subnet_id), self.pg_name(vm.virtual_network()))
 
+            storage_cmd = ''
+            try:
+                if vm.storage_type is not None:
+                    storage_cmd = \
+                        '--block-device-mappings "[{\\"DeviceName\\": \\"/dev/sda1\\",\\"Ebs\\":{\\"VolumeSize\\":100, \\"VolumeType\\": \\"%s\\"}}]"' % vm.storage_type
+            except Exception:
+                pass
+
             ret = ''
             ret = self.exe('run-instances --image-id %s --count 1 \
                     --instance-type %s --key-name=cloud %s\
-                    --block-device-mappings \
-                    "[{\\"DeviceName\\": \\"/dev/sda1\\",\\"Ebs\\":{\\"VolumeSize\\":100, \\"VolumeType\\": \\"%s\\"}}]"\
-            --query "Instances[0].InstanceId"' % (vm.image, vm.type, net_cmd, vm.storage_type), output)
-
-            # If the instance doesn't have SSD, make sure that we allocate 100Gb of Volume for it
-            # if vm.type.find('m3') == -1:
-            #     ret = self.exe('run-instances --image-id %s --count 1 \
-            #             --instance-type %s --key-name=cloud %s\
-            #             --block-device-mappings \
-            #             "[{\\"DeviceName\\": \\"/dev/sda1\\",\\"Ebs\\":{\\"VolumeSize\\":100}}]"\
-            #     --query "Instances[0].InstanceId"' % (vm.image, vm.type, net_cmd), output)
-            # else:
-            #     ret = self.exe('run-instances --image-id %s --count 1 \
-            #             --instance-type %s --key-name=cloud %s\
-            #     --query "Instances[0].InstanceId"' % (vm.image, vm.type, net_cmd), output)
-
+                    %s --query "Instances[0].InstanceId"' % (vm.image, vm.type, net_cmd, storage_cmd), output)
 
             if ret:
                     self.data[self.vm_name(vm)] = output['stdout'].strip()

@@ -23,14 +23,14 @@
 
     <virtual-machines>
         <!-- Group 1 -->
-        <virtual-machine name='vmwestus'      virtual-network='vnwestus'     image='config:imagewestus'     type='global:vm-type' location='gwestus'/>
-        <virtual-machine name='vmwesteurope'  virtual-network='vnwesteurope' image='config:imagewesteurope' type='global:vm-type' location='gwesteurope'/>
-        <virtual-machine name='vmjapaneast'   virtual-network='vnjapaneast'  image='config:imagejapaneast'  type='global:vm-type' location='gjapaneast'/>
+        <virtual-machine name='vmwestus'      virtual-network='vnwestus'     image='config:imagewestus'     type='global:instance-type' location='gwestus'/>
+        <virtual-machine name='vmwesteurope'  virtual-network='vnwesteurope' image='config:imagewesteurope' type='global:instance-type' location='gwesteurope'/>
+        <virtual-machine name='vmjapaneast'   virtual-network='vnjapaneast'  image='config:imagejapaneast'  type='global:instance-type' location='gjapaneast'/>
 
         <!-- Group 2 -->
-        <virtual-machine name='vm2westus'     virtual-network='vnwestus'     image='config:imagewestus'     type='global:vm-type' location='gwestus'/>
-        <virtual-machine name='vm2westeurope' virtual-network='vnwesteurope' image='config:imagewesteurope' type='global:vm-type' location='gwesteurope'/>
-        <virtual-machine name='vm2japaneast'  virtual-network='vnjapaneast'  image='config:imagejapaneast'  type='global:vm-type' location='gjapaneast'/>
+        <virtual-machine name='vm2westus'     virtual-network='vnwestus'     image='config:imagewestus'     type='global:instance-type' location='gwestus'/>
+        <virtual-machine name='vm2westeurope' virtual-network='vnwesteurope' image='config:imagewesteurope' type='global:instance-type' location='gwesteurope'/>
+        <virtual-machine name='vm2japaneast'  virtual-network='vnjapaneast'  image='config:imagejapaneast'  type='global:instance-type' location='gjapaneast'/>
     </virtual-machines>
 
     <azure>
