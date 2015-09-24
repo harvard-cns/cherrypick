@@ -340,7 +340,7 @@ class AwsCloud(Cloud):
         return self.create_subnet(vnet, availability_zone)
 
 
-    def delete_subnet(self, vnet, availaiblity_zone):
+    def delete_subnet(self, vnet, availability_zone):
         try:
             ret = self.exe('delete-subnet --subnet-id {0}'.format(self.subnet_id(vnet, availability_zone, throw=False)))
             if ret:
@@ -453,7 +453,6 @@ class AwsCloud(Cloud):
             ret = self.exe('delete-vpc --vpc-id {0}'.format(self.vnet_id(vnet, throw=False)))
             if ret:
                 del self.data[self.vnet_name(vnet)]
-                del self.data[self.subnet_name(vnet)]
                 del self.data[self.gw_name(vnet)]
             return True
 
