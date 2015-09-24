@@ -106,8 +106,8 @@ class AzureCloud(Cloud):
         def create_endpoint(vm):
             cmd = ['azure', 'vm', 'endpoint', 'create']
             cmd += [self.unique(vm), ep.public_port, ep.private_port]
-            cmd += ['--endpoint-name', self.unique(ep.name)]
-            cmd += ['--endpoint-protocol', ep.protocol]
+            cmd += ['--name', self.unique(ep.name)[-15:]] # Endpoint name should be at most 15 characters
+            cmd += ['--protocol', ep.protocol]
             self.execute(cmd)
 
         parallel(create_endpoint, ep.virtual_machines())
@@ -144,8 +144,7 @@ class AzureCloud(Cloud):
     def delete_security_group(self, _):
         """ Delete an azure 'security-group' a.k.a. an endpoint.
 
-        We don't actually delete anything here, it's just a method that
-        should be provided by the cloud interface """
+        We do not need to delete anything here, Azure takes care of it when we wipe out the machine"""
 
         return True
 

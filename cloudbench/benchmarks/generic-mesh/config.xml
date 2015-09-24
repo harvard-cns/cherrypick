@@ -42,7 +42,7 @@
 
         <config name='westus'     value='West US'     />
         <config name='westeurope' value='West Europe' />
-        <config name='japaneast'  value='Japan East'  />
+        <config name='japaneast'  value='Japan West'  />
 
         <config name='vnetaddr' value='10.0.0.0' />
 
@@ -63,6 +63,17 @@
         <config name='westus'     value='us-west-1'     />
         <config name='westeurope' value='eu-west-1'     />
         <config name='japaneast'  value='ap-northeast-1'/>
+
+        <virtual-machines>
+            <add-values name='vmjapaneast'  availability-zone='ap-northeast-1a' />
+            <add-values name='vmwesteurope' availability-zone='eu-west-1a' />
+            <add-values name='vmwestus'     availability-zone='us-west-1a' />
+
+            <add-values name='vm2japaneast'  availability-zone='ap-northeast-1c' />
+            <add-values name='vm2westeurope' availability-zone='eu-west-1b' />
+            <add-values name='vm2westus'     availability-zone='us-west-1b' />
+        </virtual-machines>
+
 
         <!--
         <virtual-networks>

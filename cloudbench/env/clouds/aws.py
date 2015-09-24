@@ -1,4 +1,5 @@
 import base64
+import json
 import shlex
 import subprocess
 import time
@@ -236,9 +237,17 @@ class AwsCloud(Cloud):
             self.to_location_of(vm)
             output = {}
 
+
             net_cmd = '--security-groups {0}'.format(self.sg_for_loc(vm))
             if vm.virtual_network():
-                subnet_id = self.data[self.subnet_name(vm.virtual_network())]
+                vm_az = self.default_availability_zone(vm.virtual_network())
+                try:
+                    if vm.availability_zone is not None:
+                        vm_az = vm.availability_zone
+                except Exception:
+                    pass
+
+                subnet_id = self.find_or_create_subnet(vm.virtual_network(), vm_az)
                 net_cmd = '--subnet-id=%s' % subnet_id
                 if 'placement_group' in vm.virtual_network() and (vm.virtual_network().placement_group == "true"):
                     net_cmd = net_cmd + ' --placement AvailabilityZone=%s,GroupName=%s,Tenancy=default' % (self.availability_zone_of_subnet(subnet_id), self.pg_name(vm.virtual_network()))
@@ -251,7 +260,6 @@ class AwsCloud(Cloud):
             except Exception:
                 pass
 
-            ret = ''
             ret = self.exe('run-instances --image-id %s --count 1 \
                     --instance-type %s --key-name=cloud %s\
                     %s --query "Instances[0].InstanceId"' % (vm.image, vm.type, net_cmd, storage_cmd), output)
@@ -264,11 +272,14 @@ class AwsCloud(Cloud):
         """ Return the name of the VNet to avoid conflicts """
         return 'net-' + vnet.name
 
-    def subnet_name(self, vnet):
-        return self.vnet_name(vnet) + '-subnet'
+    def subnet_name(self, vnet, az):
+        return self.vnet_name(vnet) + '-' + az + '-subnet'
 
-    def subnet_id(self, vnet, throw=False):
-        return self.get_id(vnet, 'subnet', throw)
+    def subnet_id(self, vnet, az, throw=False):
+        vid = self.data[self.subnet_name(vnet, az)]
+        if throw and (not vid):
+            raise KeyError("No such %s exists" % entity.__class__.__name__)
+        return vid
 
     def pg_name(self, vnet):
         """ Return the name of the placement group for our Virtual Network """
@@ -299,6 +310,54 @@ class AwsCloud(Cloud):
 
             return False
 
+    def subnet_range_for_availability_zone(self, vnet, availability_zone):
+        parts = vnet.address_range.split(".")
+        subnet = str(ord(availability_zone[-1]) - ord('a'))
+        return ".".join([parts[0], parts[1], subnet, '0/24'])
+
+
+    def create_subnet(self, vnet, availability_zone):
+        vid = self.vnet_id(vnet, throw=True)
+        subnet_range = self.subnet_range_for_availability_zone(vnet, availability_zone)
+        output = {}
+
+        # Create a subnet equal to the VNet size
+        if not self.exe('create-subnet --vpc-id {0} --cidr-block {1} --availability-zone {2}\
+                --query "Subnet.SubnetId"'.format(
+                    vid, subnet_range, availability_zone
+                ), output):
+            raise Exception("Failed to create the subnet")
+        subnet_id = output['stdout'].strip()
+        self.exe('modify-subnet-attribute --subnet-id=%s --map-public-ip-on-launch' % subnet_id)
+        self.data[self.subnet_name(vnet, availability_zone)] = subnet_id
+        return subnet_id
+
+    def find_or_create_subnet(self, vnet, availability_zone):
+        sid = self.subnet_id(vnet, availability_zone, throw=False)
+        if sid is not None:
+            return sid
+        
+        return self.create_subnet(vnet, availability_zone)
+
+
+    def delete_subnet(self, vnet, availaiblity_zone):
+        try:
+            ret = self.exe('delete-subnet --subnet-id {0}'.format(self.subnet_id(vnet, availability_zone, throw=False)))
+            if ret:
+                del self.data[self.subnet_name(vnet, availability_zone)]
+        except Exception:
+            pass
+
+    def default_availability_zone(self, vnet):
+        return self.list_availability_zones(vnet)[0]
+
+    def list_availability_zones(self, vnet):
+        with self.lock:
+            self.to_location_of(vnet)
+            output = {}
+            ret = self.exe('describe-availability-zones --query "AvailabilityZones[*].ZoneName"', output)
+            return json.loads(output['stdout'])
+
     def create_virtual_network(self, vnet):
         # aws ec2 create-subnet --vpc-id <value> --cidr-block <IP prefix with "/">.
         with self.lock:
@@ -314,15 +373,6 @@ class AwsCloud(Cloud):
 
             # Get the VNet ID
             vid = self.vnet_id(vnet, throw=True)
-
-            # Create a subnet equal to the VNet size
-            if not self.exe('create-subnet --vpc-id {0} --cidr-block {1} \
-                    --query "Subnet.SubnetId"'.format(vid,
-                        vnet.address_range), output):
-                raise Exception("Failed to create the subnet")
-            subnet_id = output['stdout'].strip()
-            self.exe('modify-subnet-attribute --subnet-id=%s --map-public-ip-on-launch' % subnet_id)
-            self.data[self.subnet_name(vnet)] = subnet_id
 
             # Setup the security group rules
             self.exe('describe-security-groups --filter="Name=vpc-id,Values={0}" --query="SecurityGroups[0].GroupId"'.format(vid), output)
@@ -380,6 +430,12 @@ class AwsCloud(Cloud):
 
             return ret
 
+    def delete_subnets(self, vnet):
+        with self.lock:
+            self.to_location_of(vnet)
+            for az in self.list_availability_zones(vnet):
+                self.delete_subnet(vnet, az)
+
     def delete_virtual_network(self, vnet):
         # aws ec2 delete-subnet
         # Return true if we have already deleted this vnet
@@ -393,7 +449,7 @@ class AwsCloud(Cloud):
 
             ret = self.exe('detach-internet-gateway --internet-gateway-id {0} --vpc-id {1}'.format(self.gw_id(vnet, throw=False), self.vnet_id(vnet, throw=False)))
             ret = self.exe('delete-internet-gateway --internet-gateway-id {0}'.format(self.gw_id(vnet, throw=False)))
-            ret = self.exe('delete-subnet --subnet-id {0}'.format(self.subnet_id(vnet, throw=False)))
+            self.delete_subnets(vnet)
             ret = self.exe('delete-vpc --vpc-id {0}'.format(self.vnet_id(vnet, throw=False)))
             if ret:
                 del self.data[self.vnet_name(vnet)]
