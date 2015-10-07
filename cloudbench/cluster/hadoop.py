@@ -7,6 +7,12 @@ from cloudbench.util import parallel
 def bytes2mega(size):
     return size/(1024*1024)
 
+def hdfs_path(vm):
+    if vm.has_dir('/mnt'):
+        return '/mnt'
+    else:
+        return '/home/%s' % HADOOP_USER
+
 
 CoreSiteTemplate="""<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
@@ -54,6 +60,11 @@ class HadoopCluster(Cluster):
 
         super(HadoopCluster, self).__init__(self.all_nodes(), HADOOP_USER)
 
+        def set_hdfs_permissions(vm):
+            path = hdfs_path(vm)
+            vm.script("chmod -R 777 %s" % path)
+        parallel(set_hdfs_permissions, self.all_nodes())
+
     @property
     def master(self):
         return self.master_
@@ -78,7 +89,7 @@ class HadoopCluster(Cluster):
         config = """
            <property>
              <name>hadoop.tmp.dir</name>
-             <value>file:///home/{0}/tmp</value>
+             <value>file://{0}/tmp</value>
              <description>Temporary Directory.</description>
            </property>
 
@@ -89,7 +100,7 @@ class HadoopCluster(Cluster):
            </property> 
         """
 
-        config = CoreSiteTemplate.format(config.format(HADOOP_USER, self.master.name))
+        config = CoreSiteTemplate.format(config.format(hdfs_path(self.master), self.master.name))
         command = modify_hadoop_config(config, '/etc/hadoop/core-site.xml')
     
         # Upload the file in parallel
@@ -146,8 +157,8 @@ class HadoopCluster(Cluster):
   <value>-Xmx{4}m</value>
 </property>
 """
-        map_size = int(bytes2mega(vm.memory() - 1024) / (vm.cpus() * 2))
-        red_size = int(bytes2mega(vm.memory() - 1024) / (vm.cpus() * 1))
+        map_size = int((bytes2mega(vm.memory()) - 1024) / (vm.cpus() * 2))
+        red_size = int((bytes2mega(vm.memory()) - 1024) / (vm.cpus() * 1))
         
         map_heap_size = map_size * 3 / 4
         red_heap_size = red_size * 3 / 4
@@ -162,10 +173,10 @@ class HadoopCluster(Cluster):
         self.master.script(self.mapred_config(self.master))
 
     def setup_hdfs_site(self):
-        dirs = ["/home/{0}/hdfs/datanode", "/home/{0}/hdfs/namenode"]
+        dirs = ["{0}/hdfs/datanode", "{0}/hdfs/namenode"]
         def create_hdfs_dirs(vm):
             for d in dirs:
-                vm.script('sudo su - {0} -c "mkdir -p {1}"'.format(HADOOP_USER, d))
+                vm.script('sudo su - {0} -c "mkdir -p {1}"'.format(hdfs_path(vm), d))
 
         parallel(create_hdfs_dirs, self.all_nodes())
 
@@ -180,18 +191,18 @@ class HadoopCluster(Cluster):
 </property>
 <property>
  <name>dfs.namenode.name.dir</name>
- <value>/home/{0}/hdfs/namenode</value>
+ <value>{0}/hdfs/namenode</value>
  <description>Determines where on the local filesystem the DFS name node should store the name table(fsimage). If this is a comma-delimited list of directories then the name table is replicated in all of the directories, for redundancy.
  </description>
 </property>
 <property>
  <name>dfs.datanode.data.dir</name>
- <value>/home/{0}/hdfs/datanode</value>
+ <value>{0}/hdfs/datanode</value>
  <description>Determines where on the local filesystem an DFS data node should store its blocks. If this is a comma-delimited list of directories, then data will be stored in all named directories, typically on different devices. Directories that do not exist are ignored.
  </description>
 </property>
 """
-        config = HdfsSiteTemplate.format(config.format(HADOOP_USER))
+        config = HdfsSiteTemplate.format(config.format(hdfs_path(self.master)))
         command = modify_hadoop_config(config, '/etc/hadoop/hdfs-site.xml')
         parallel(lambda vm: vm.script(command), self.all_nodes())
 
@@ -237,10 +248,15 @@ class HadoopCluster(Cluster):
   <name>yarn.resourcemanager.hostname</name>
   <value>{0}</value>
 </property>
+<property>
+   <name>yarn.nodemanager.vmem-pmem-ratio</name>
+   <value>4</value>
+   <description>Ratio between virtual memory to physical memory when setting memory limits for containers</description>
+</property>
 """
         total_mem_size = bytes2mega(vm.memory()) - 1024
         min_mem_size   = total_mem_size / (vm.cpus()*3)
-        min_mem_size   = total_mem_size / (vm.cpus())
+        #min_mem_size   = total_mem_size / (vm.cpus())
 
         config = YarnSiteTemplate.format(
                 config.format(self.master.name, total_mem_size, min_mem_size)) 
@@ -278,6 +294,12 @@ class HadoopCluster(Cluster):
         self.setup_hdfs_site()
         self.setup_yarn_site()
         self.setup_slaves()
+
+    def reset(self):
+        self.format_hdfs()
+        self.restart_dfs()
+        self.restart_yarn()
+        self.restart_job_history()
 
     def hadoop_user_cmd(self, cmd):
         return 'sudo su - {0} -c {1}'.format(HADOOP_USER, cmd)
@@ -319,10 +341,10 @@ class HadoopCluster(Cluster):
         self.start_yarn()
 
     def format_hdfs(self):
-        remove_hdfs_dir = self.hadoop_user_cmd('"rm -rf /home/{0}/hdfs"'.format(HADOOP_USER))
+        remove_hdfs_dir = self.hadoop_user_cmd('"rm -rf {0}/hdfs"'.format(hdfs_path(self.master)))
         parallel(lambda vm: vm.script(remove_hdfs_dir), self.all_nodes())
 
-        remove_hdfs_dir = self.hadoop_user_cmd('"rm -rf /home/{0}/tmp"'.format(HADOOP_USER))
+        remove_hdfs_dir = self.hadoop_user_cmd('"rm -rf {0}/tmp"'.format(hdfs_path(self.master)))
         parallel(lambda vm: vm.script(remove_hdfs_dir), self.all_nodes())
 
         self.master.script(

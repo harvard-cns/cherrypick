@@ -27,6 +27,12 @@ class Linux(RsyncTransfer, SecureShell, LinuxInstaller, LinuxFileSystem):
     def root_disk(self):
         return self.script("df -P / | tail -n 1 | awk '/.*/ { print $1 }'")
 
+    def has_dir(self, path):
+        output = self.script("if [ -d \"%s\" ]; then echo true; else echo false; fi" % path)
+        if output.strip() == 'true':
+            return True
+        return False
+
 class Ubuntu(Linux):
     def __init__(self, *args, **kwargs):
         super(Ubuntu, self).__init__(*args, **kwargs)

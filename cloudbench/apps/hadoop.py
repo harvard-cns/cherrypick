@@ -25,6 +25,7 @@ def setup_user_env(vm):
     hadoop_env = """sudo su {0} -c cat <<EOT >> /home/{0}/.profile
 export JAVA_HOME=/usr/lib/jvm/java-8-oracle
 export HADOOP_INSTALL={1}
+export HADOOP_HOME=\$HADOOP_INSTALL
 export PATH=\$PATH:\$HADOOP_INSTALL/bin
 export PATH=\$PATH:\$HADOOP_INSTALL/sbin
 export HADOOP_MAPRED_HOME=\$HADOOP_INSTALL
