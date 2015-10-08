@@ -62,7 +62,7 @@ class HadoopCluster(Cluster):
 
         def set_hdfs_permissions(vm):
             path = hdfs_path(vm)
-            vm.script("chmod -R 777 %s" % path)
+            vm.script("chmod -R 755 %s" % path)
         parallel(set_hdfs_permissions, self.all_nodes())
 
     @property
@@ -250,7 +250,7 @@ class HadoopCluster(Cluster):
 </property>
 <property>
    <name>yarn.nodemanager.vmem-pmem-ratio</name>
-   <value>4</value>
+   <value>5</value>
    <description>Ratio between virtual memory to physical memory when setting memory limits for containers</description>
 </property>
 """
