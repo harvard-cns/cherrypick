@@ -37,7 +37,7 @@ def terasort_with_argos_run(vms, env):
     parallel(lambda vm: vm.install('ntp'), vms)
     parallel(lambda vm: vm.install('argos'), vms)
 
-    cluster = HadoopCluster(vms[0], vms[1:])
+    cluster = HadoopCluster(vms[0], vms[1:], env.param('terasort:use_local_disk'))
     cluster.setup()
     cluster.reset()
 
@@ -77,7 +77,7 @@ def terasort_no_argos_run(vms, env):
     parallel(lambda vm: vm.install('hadoop'), vms)
     parallel(lambda vm: vm.install('ntp'), vms)
 
-    cluster = HadoopCluster(vms[0], vms[1:])
+    cluster = HadoopCluster(vms[0], vms[1:], env.param('terasort:use_local_disk'))
     cluster.setup()
     cluster.reset()
 
@@ -105,7 +105,7 @@ def hive_test(vms, env):
 
     vms[0].install('bigbench')
 
-    hadoop = HadoopCluster(vms[0], vms[1:])
+    hadoop = HadoopCluster(vms[0], vms[1:], env.param('terasort:use_local_disk'))
     hadoop.setup()
     hadoop.reset()
 

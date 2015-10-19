@@ -17,20 +17,10 @@ from threading import RLock
 # Timeout of 50 minutes
 TIMEOUT=50*60
 
-def install(vm):
-    """ Install the required applications for the VM """
-
-    if not hasattr(vm, '_install'):
-        vm._install = True
-
-        vm.install('coremark')
-        vm.install('pmbw')
-        vm.install('fio')
-
 def run_benchmarks(vms, env):
     vm1 = vms[0]
 
-    install(vm1)
+    #install(vm1)
 
     iobw = {}
     membw = {}
@@ -38,23 +28,23 @@ def run_benchmarks(vms, env):
     coremp = {}
     hdres = {}
 
-    # while 'coremark_mp' not in coremp:
-    #     vm1.script('sudo aptitude update')
-    #     vm1.install('coremark')
-    #     coremp = coremark_mp(vm1, env)
+    while 'coremark_mp' not in coremp:
+        vm1.script('sudo aptitude update')
+        vm1.install('coremark')
+        coremp = coremark_mp(vm1, env)
 
-    # while 'coremark' not in coresp:
-    #     coresp = coremark(vm1, env)
+    while 'coremark' not in coresp:
+        coresp = coremark(vm1, env)
 
-    # while 'ScanWrite64PtrUnrollLoop' not in membw:
-    #     vm1.script('sudo aptitude update')
-    #     vm1.install('pmbw')
-    #     membw  = pmbw(vm1, env)
+    while 'ScanWrite64PtrUnrollLoop' not in membw:
+        vm1.script('sudo aptitude update')
+        vm1.install('pmbw')
+        membw  = pmbw(vm1, env)
 
-    # while 'r70' not in iobw:
-    #     vm1.script('sudo aptitude update')
-    #     vm1.install('fio')
-    #     iobw   = fio(vm1, env)
+    while 'r70' not in iobw:
+        vm1.script('sudo aptitude update')
+        vm1.install('fio')
+        iobw   = fio(vm1, env)
 
     while 'hdparm_read' not in hdres:
         vm1.script('sudo aptitude update')
@@ -62,10 +52,10 @@ def run_benchmarks(vms, env):
         hdres = hdparm(vm1, env)
 
     res = {
-       #'coremp': coremp,
-       #'coresp': coresp,
-       #'membw': membw,
-       #'iobw': iobw,
+       'coremp': coremp,
+       'coresp': coresp,
+       'membw': membw,
+       'iobw': iobw,
        'hdparm': hdres
     }
 

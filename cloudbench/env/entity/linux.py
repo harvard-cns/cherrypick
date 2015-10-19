@@ -33,6 +33,16 @@ class Linux(RsyncTransfer, SecureShell, LinuxInstaller, LinuxFileSystem):
             return True
         return False
 
+    def mount(self, disk, path, disk_format='ext3', force_format=False):
+        partition = disk + '1'
+        if force_format:
+            self.script('umount %s' % disk)
+            self.script('(echo o; echo n; echo p; echo 1; echo; echo; echo w) | sudo fdisk %s' % disk)
+            self.script('partprobe')
+            self.script('sudo mkfs.%s %s' % (disk_format, partition))
+        self.script('mkdir -p %s' % path)
+        self.script('mount %s %s' % (partition, path))
+
 class Ubuntu(Linux):
     def __init__(self, *args, **kwargs):
         super(Ubuntu, self).__init__(*args, **kwargs)

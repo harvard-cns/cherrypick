@@ -1,18 +1,11 @@
 from .base import Cluster
-from cloudbench.apps.hadoop import HADOOP_USER, HADOOP_DIR
+from cloudbench.apps.hadoop import HADOOP_USER, HADOOP_DIR, HADOOP_GROUP
 from cloudbench.util import parallel
 
 # The instruction is taken from:
 # https://chawlasumit.wordpress.com/2015/03/09/install-a-multi-node-hadoop-cluster-on-ubuntu-14-04/
 def bytes2mega(size):
     return size/(1024*1024)
-
-def hdfs_path(vm):
-    if vm.has_dir('/mnt'):
-        return '/mnt'
-    else:
-        return '/home/%s' % HADOOP_USER
-
 
 CoreSiteTemplate="""<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
@@ -54,16 +47,31 @@ def modify_hadoop_config(config, f):
     return command
 
 class HadoopCluster(Cluster):
-    def __init__(self, master_, slaves_):
+    def __init__(self, master_, slaves_, local_disk_=True):
         self.master = master_
         self.slaves_ = slaves_
+        self.local_disk_ = local_disk_
 
         super(HadoopCluster, self).__init__(self.all_nodes(), HADOOP_USER)
 
-        def set_hdfs_permissions(vm):
-            path = hdfs_path(vm)
-            vm.script("chmod -R 755 %s" % path)
-        parallel(set_hdfs_permissions, self.all_nodes())
+        def setup_hdfs_permissions(vm):
+            path = self.hdfs_path(vm)
+            if 'home' not in path:
+                vm.mount('/dev/xvdb', path, 'ext4', True)
+                vm.script('chown -R %s:%s %s' % (HADOOP_USER, HADOOP_GROUP, path))
+                vm.script("chmod -R 755 %s" % path)
+
+        parallel(setup_hdfs_permissions, self.all_nodes())
+
+    def hdfs_path(self, vm):
+        if self.use_local_disk:
+            return '/hadoop-data'
+        else:
+            return '/home/%s' % HADOOP_USER
+
+    @property
+    def use_local_disk(self):
+        return self.local_disk_
 
     @property
     def master(self):
@@ -100,7 +108,7 @@ class HadoopCluster(Cluster):
            </property> 
         """
 
-        config = CoreSiteTemplate.format(config.format(hdfs_path(self.master), self.master.name))
+        config = CoreSiteTemplate.format(config.format(self.hdfs_path(self.master), self.master.name))
         command = modify_hadoop_config(config, '/etc/hadoop/core-site.xml')
     
         # Upload the file in parallel
@@ -175,8 +183,8 @@ class HadoopCluster(Cluster):
     def setup_hdfs_site(self):
         dirs = ["{0}/hdfs/datanode", "{0}/hdfs/namenode"]
         def create_hdfs_dirs(vm):
-            for d in dirs:
-                vm.script('sudo su - {0} -c "mkdir -p {1}"'.format(hdfs_path(vm), d))
+            for d in map(lambda x: x.format(self.hdfs_path(vm)), dirs):
+                vm.script('sudo su - {0} -c "mkdir -p {1}"'.format(HADOOP_USER, d))
 
         parallel(create_hdfs_dirs, self.all_nodes())
 
@@ -202,7 +210,7 @@ class HadoopCluster(Cluster):
  </description>
 </property>
 """
-        config = HdfsSiteTemplate.format(config.format(hdfs_path(self.master)))
+        config = HdfsSiteTemplate.format(config.format(self.hdfs_path(self.master)))
         command = modify_hadoop_config(config, '/etc/hadoop/hdfs-site.xml')
         parallel(lambda vm: vm.script(command), self.all_nodes())
 
@@ -341,10 +349,10 @@ class HadoopCluster(Cluster):
         self.start_yarn()
 
     def format_hdfs(self):
-        remove_hdfs_dir = self.hadoop_user_cmd('"rm -rf {0}/hdfs"'.format(hdfs_path(self.master)))
+        remove_hdfs_dir = self.hadoop_user_cmd('"rm -rf {0}/hdfs"'.format(self.hdfs_path(self.master)))
         parallel(lambda vm: vm.script(remove_hdfs_dir), self.all_nodes())
 
-        remove_hdfs_dir = self.hadoop_user_cmd('"rm -rf {0}/tmp"'.format(hdfs_path(self.master)))
+        remove_hdfs_dir = self.hadoop_user_cmd('"rm -rf {0}/tmp"'.format(self.hdfs_path(self.master)))
         parallel(lambda vm: vm.script(remove_hdfs_dir), self.all_nodes())
 
         self.master.script(
