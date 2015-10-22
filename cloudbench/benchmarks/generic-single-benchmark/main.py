@@ -22,47 +22,54 @@ def run_benchmarks(vms, env):
 
     #install(vm1)
 
-    iobw = {}
-    membw = {}
-    coresp = {}
-    coremp = {}
-    hdres = {}
+    for iteration in range(1, 6):
 
-    while 'coremark_mp' not in coremp:
-        vm1.script('sudo aptitude update')
-        vm1.install('coremark')
-        coremp = coremark_mp(vm1, env)
+        iobw = {}
+        membw = {}
+        coresp = {}
+        coremp = {}
+        hdres = {}
 
-    while 'coremark' not in coresp:
-        coresp = coremark(vm1, env)
+        while 'coremark_mp' not in coremp:
+            vm1.script('sudo aptitude update')
+            vm1.install('coremark')
+            coremp = coremark_mp(vm1, env)
 
-    while 'ScanWrite64PtrUnrollLoop' not in membw:
-        vm1.script('sudo aptitude update')
-        vm1.install('pmbw')
-        membw  = pmbw(vm1, env)
+        while 'coremark' not in coresp:
+            coresp = coremark(vm1, env)
 
-    while 'r70' not in iobw:
-        vm1.script('sudo aptitude update')
-        vm1.install('fio')
-        iobw   = fio(vm1, env)
+        # while 'ScanWrite64PtrUnrollLoop' not in membw:
+        #     vm1.script('sudo aptitude update')
+        #     vm1.install('pmbw')
+        #     membw  = pmbw(vm1, env)
 
-    while 'hdparm_read' not in hdres:
-        vm1.script('sudo aptitude update')
-        vm1.install('hdparm')
-        hdres = hdparm(vm1, env)
+        # while 'r70' not in iobw:
+        #     vm1.script('sudo aptitude update')
+        #     vm1.install('fio')
+        #     iobw   = fio(vm1, env)
 
-    res = {
-       'coremp': coremp,
-       'coresp': coresp,
-       'membw': membw,
-       'iobw': iobw,
-       'hdparm': hdres
-    }
+        iobw= { "w30" : "1",
+                "server_location" : "us-west-1",
+                "r100" : "1",
+                "r70" : "1" }
 
-    storage = JsonStorage(env, vm1.type + '-' + vm1.storage_type + '-hdparm' + '.json')
-    storage.save(res)
+        while 'hdparm_read' not in hdres:
+            vm1.script('sudo aptitude update')
+            vm1.install('hdparm')
+            hdres = hdparm(vm1, env)
 
-    print ('Result: %s' % res)
+        res = {
+           'coremp': coremp,
+           'coresp': coresp,
+           #'membw': membw,
+           'iobw': iobw,
+           'hdparm': hdres
+        }
+
+        storage = JsonStorage(env, vm1.type + '-' + str(iteration) + '-' + 'local' + '-hdparm' + '.json')
+        #storage = JsonStorage(env, vm1.type + '-' + vm1.storage_type + '-hdparm' + '.json')
+        storage.save(res)
+        print ('Result: %s' % res)
 
 def run(env):
     """ Run the mesh benchmark.

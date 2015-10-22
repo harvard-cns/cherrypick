@@ -1,14 +1,15 @@
 import os
+import time
 
 from .base import Cluster
-from cloudbench.apps.cassandra import CASSANDRA_USER, CASSANDRA_DIR
+from cloudbench.apps.cassandra import CASSANDRA_USER, CASSANDRA_GROUP, CASSANDRA_PATH
 from cloudbench.util import parallel
 
 CassandraTemplate="""
 seed_provider:
     - class_name: org.apache.cassandra.locator.SimpleSeedProvider
-    parameters:
-        - seeds:  "%s"
+      parameters:
+          - seeds:  "%s"
 
 data_file_directories:
     - %s/data
@@ -19,7 +20,7 @@ CassandraBase="""
 cluster_name: '%s'
 num_tokens: 256
 listen_address: %s
-rpc_address: 0.0.0.0
+rpc_address: %s
 endpoint_snitch: %s
 """
 
@@ -40,6 +41,10 @@ class CassandraCluster(Cluster):
         return [self._seed]
 
     @property
+    def seed_ips(self):
+        return map(lambda x: x.intf_ip('eth0'), self.seeds)
+
+    @property
     def nodes(self):
         return self._nodes
 
@@ -51,24 +56,32 @@ class CassandraCluster(Cluster):
     def datapath(self):
         return self._datapath
 
-    def reset(self):
+    def reset_single_instance(self, vm):
         data_folder = '%s/data' % self.datapath
         log_folder = '%s/commitlog' % self.datapath
-        vm.script('rm -rf %s' % data_folder)
-        vm.script('rm -rf %s' % log_folder)
-        vm.script('mkdir %s' % data_folder)
-        vm.script('mkdir %s' % log_folder)
-        vm.script('chown -R ubuntu:ubuntu %s' % data_folder)
-        vm.script('chown -R ubuntu:ubuntu %s' % log_folder)
+        vm.script('rm -rf %s/*' % self.datapath)
+        vm.script('mkdir -p %s' % data_folder)
+        vm.script('mkdir -p %s' % log_folder)
+        vm.script('chown -R {0}:{1} {2}'.format(CASSANDRA_USER, CASSANDRA_GROUP, self.datapath))
+        vm.script('chown -R {0}:{1} {2}'.format(CASSANDRA_USER, CASSANDRA_GROUP, data_folder))
+        vm.script('chown -R {0}:{1} {2}'.format(CASSANDRA_USER, CASSANDRA_GROUP, log_folder))
+
+    def reset(self):
+        parallel(self.reset_single_instance, self.nodes)
 
     def kill_single_instance(self, vm):
-        vm.script('pkill cassandra')
+        vm.script('pkill -9 java')
 
     def kill(self):
         parallel(self.kill_single_instance, self.nodes)
 
     def start_single_instance(self, vm):
-        vm.script('sudo su - ubuntu - && cd %s && ./bin/cassandra')
+        vm.script('sudo su - %s -c "cd %s && ./bin/cassandra"' % (CASSANDRA_USER, CASSANDRA_PATH))
+
+    def start(self):
+        parallel(self.start_single_instance, self.seeds)
+        for vm in [x for x in self.nodes if x not in self.seeds]:
+            self.start_single_instance(vm)
 
     def setup(self):
         template = []
@@ -80,15 +93,40 @@ class CassandraCluster(Cluster):
             basedata = f.read()
 
         conndata = CassandraTemplate % (
-                    self.datapath, self.datapath,
-                    ','.join(self.seeds))
+                    ','.join(self.seed_ips),
+                    self.datapath, self.datapath)
 
         def write_yaml(vm):
             pernodedata = CassandraBase % (
                     self.name, 
+                    vm.intf_ip('eth0'),
                     vm.intf_ip('eth0'),
                     self.snitch)
 
             config = "\n".join([basedata, pernodedata, conndata])
             vm.script('sudo cat <<EOT > {0}/conf/cassandra.yaml\n{1}\nEOT'.format(CASSANDRA_PATH, config))
         parallel(write_yaml, self.nodes)
+
+    def node_ip_list(self):
+        return map(lambda node: node.intf_ip('eth0'), self.nodes)
+
+    def stress_test_write(self, size):
+        master = self.seeds[0]
+        return master.script("cd %s; ./tools/bin/cassandra-stress write n=%s -node %s | tail -n 100" % (
+            CASSANDRA_PATH, str(size), ','.join(self.node_ip_list())))
+
+    def stress_test_read(self):
+        master = self.seeds[0]
+        return master.script("cd %s; ./tools/bin/cassandra-stress read -node %s | tail -n 100" % (
+            CASSANDRA_PATH, ','.join(self.node_ip_list())))
+
+    def stress_test_mixed(self, write, read):
+        master = self.seeds[0]
+        return master.script("cd %s; ./tools/bin/cassandra-stress mixed ratio\\(write=%s,read=%s\\) -node %s -rate threads\\>=100 | tail -n 100" % (
+            CASSANDRA_PATH, str(write), str(read), ','.join(self.node_ip_list())))
+
+    def stress_test_mixed_with_thread_count(self, write, read, count, thread_count):
+        master = self.seeds[0]
+        return master.script("cd %s; ./tools/bin/cassandra-stress mixed ratio\\(write=%s,read=%s\\) n=%d -node %s -rate threads\\>=%d threads\\<=%d | tail -n 100" % (
+            CASSANDRA_PATH, str(write), str(read), count, ','.join(self.node_ip_list()), thread_count, thread_count))
+

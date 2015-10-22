@@ -37,6 +37,7 @@ class Linux(RsyncTransfer, SecureShell, LinuxInstaller, LinuxFileSystem):
         partition = disk + '1'
         if force_format:
             self.script('umount %s' % disk)
+            self.script('umount %s1' % disk)
             self.script('(echo o; echo n; echo p; echo 1; echo; echo; echo w) | sudo fdisk %s' % disk)
             self.script('partprobe')
             self.script('sudo mkfs.%s %s' % (disk_format, partition))

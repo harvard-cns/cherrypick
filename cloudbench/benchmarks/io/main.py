@@ -7,6 +7,7 @@ import re
 TIMEOUT=300
 
 FIO_FILENAME='/home/%s/fio.file'
+FIO_FILENAME='/dev/xvdb'
 
 def install(vm):
     vm.install('fio')
@@ -72,21 +73,27 @@ def parse_fio(result):
     return out
 
 def _fio_r100_w0(vm):
+    filename = FIO_FILENAME
+    #filename = FIO_FILENAME % vm.username
+
     vm.execute('sudo killall fio')
-    vm.execute('sudo rm -rf {0}'.format(FIO_FILENAME % vm.username))
+    vm.execute('sudo rm -rf {0}'.format(filename))
     output = vm.execute('sudo fio --filename={0} --direct=1 \
 --rw=randrw --refill_buffers --norandommap --randrepeat=0 --ioengine=libaio \
---bs=4k --rwmixread=100 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
---group_reporting --name=4ktest'.format(FIO_FILENAME % vm.username, 200*1024*1024))
+--bs=4k --size={1} --rwmixread=100 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
+--group_reporting --name=4ktest'.format(filename, 1024*1024*1024))
     return parse_fio(output)
 
 def _fio_r70_w30(vm):
+    filename = FIO_FILENAME
+    #filename = FIO_FILENAME % vm.username
+
     vm.execute('sudo killall fio')
-    vm.execute('sudo rm -rf {0}'.format(FIO_FILENAME % vm.username))
+    vm.execute('sudo rm -rf {0}'.format(filename))
     output = vm.execute('sudo fio --filename={0} --direct=1 \
 --rw=randrw --refill_buffers --norandommap --randrepeat=0 --ioengine=libaio \
---bs=8k --rwmixread=70 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
---group_reporting --name=8k7030test'.format(FIO_FILENAME % vm.username, 200*1024*1024))
+--bs=8k --size={1} --rwmixread=70 --iodepth=16 --numjobs=16 --size={1} --runtime=60 \
+--group_reporting --name=8k7030test'.format(filename, 1024*1024*1024))
     return parse_fio(output)
 
 def fio(vm, env):
