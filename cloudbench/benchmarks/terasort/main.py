@@ -13,33 +13,74 @@ TIMEOUT=21600
 TERASORT_INPUT='/home/{0}/terasort-input'.format(HADOOP_USER)
 TERASORT_OUTPUT='/home/{0}/terasort-output'.format(HADOOP_USER)
 
+COLLECT_TERASORT_SCRIPT="""
+baseUrl="localhost:19888/ws/v1/history/mapreduce/jobs"
+jobId=`curl $baseUrl 2>/dev/null | jq '.jobs.job[] | select (.name == "TeraSort") | .["id"]' | sed -e 's/"//g'`
+
+jobUrl="${baseUrl}/$jobId"
+tasksUrl="$jobUrl/tasks"
+tasks=`curl $tasksUrl 2>/dev/null | jq '.tasks.task[] | .["id"]' | sed -e 's/"//g'`
+
+output=""
+for task in $tasks; do
+        data=$(curl ${tasksUrl}/${task}/attempts 2>/dev/null)
+        output="${data}\\n${output}"
+done
+
+echo -e $output > ~/attempts.json
+cat /etc/hosts | grep vm > ~/hosts
+"""
+
+def collect_terasort_stats(master):
+    master.script(COLLECT_TERASORT_SCRIPT)
+    
+    master.recv('~/attempts.json', 'vm-attempts.json')
+    master.recv('~/hosts', 'vm-hosts')
+
+def argos_start(vms):
+    parallel(lambda vm: vm.script('rm -rf ~/argos/proc'), vms)
+    parallel(lambda vm: vm.script('cd argos; sudo nohup src/argos >argos.out 2>&1 &'), vms)
+    time.sleep(2)
+
+def argos_finish(vms):
+    parallel(lambda vm: vm.script('sudo killall -SIGINT argos'), vms)
+    time.sleep(30)
+    parallel(lambda vm: vm.script('chmod -R 777 ~/argos/proc'), vms)
+
+    # Delete empty files
+    parallel(lambda vm: vm.script('find ~/argos/proc -type f -empty -delete'), vms)
+    # Delete empty directories
+    parallel(lambda vm: vm.script('find ~/argos/proc -type d -empty -delete'), vms)
+
+    # Save argos results
+    parallel(lambda vm: vm.recv('~/argos/proc', vm.name + '-proc'), vms)
+
+    # Save argos output
+    parallel(lambda vm: vm.recv('~/argos/argos.out', vm.name + '-argos.out'), vms)
+
 
 def terasort_with_argos_run(vms, env):
     parallel(lambda vm: vm.install('hadoop'), vms)
     parallel(lambda vm: vm.install('ntp'), vms)
     parallel(lambda vm: vm.install('argos'), vms)
 
-    cluster = HadoopCluster(vms[0], vms[1:], env.param('terasort:use_local_disk'))
+    cluster = HadoopCluster(vms[0], vms[1:], env.param('terasort:use_local_disk') != 'False')
     cluster.setup()
     cluster.reset()
 
     output = cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar teragen -Dmapred.map.tasks={1} {2} {0}"'.format(TERASORT_INPUT, env.param('terasort:mappers'), env.param('terasort:rows')))
     teragen_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
 
-    parallel(lambda vm: vm.script('rm -rf ~/argos/proc'), vms)
-    parallel(lambda vm: vm.script('cd argos; sudo nohup src/argos >argos.out 2>&1 &'), vms)
-    time.sleep(2)
+    argos_start(vms)
 
     cluster.execute('"/usr/bin/time -f \'%e\' -o terasort.out hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar terasort -Dmapred.reduce.tasks={2} {0} {1} >output.log 2>&1"'.format(TERASORT_INPUT, TERASORT_OUTPUT, env.param('terasort:reducers')))
 
+    argos_finish(vms)
+
+    collect_terasort_stats(cluster.master)
+
     terasort_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
     terasort_out = cluster.master.script('sudo su - hduser -c "cat output.log"').strip()
-
-    parallel(lambda vm: vm.script('sudo killall -SIGINT argos'), vms)
-    time.sleep(30)
-    parallel(lambda vm: vm.script('chmod -R 777 ~/argos/proc'), vms)
-    parallel(lambda vm: vm.recv('~/argos/proc', vm.name + '-proc'), vms)
-    parallel(lambda vm: vm.recv('~/argos/argos.out', vm.name + '-argos.out'), vms)
 
     file_name = str(time.time()) + '-' + cluster.master.type
     with open(file_name + ".time", 'w+') as f:
@@ -47,9 +88,6 @@ def terasort_with_argos_run(vms, env):
 
     with open(file_name + ".out", 'w+') as f:
         f.write(terasort_out)
-
-def terasort_run_on_cluster(vms, env):
-    pass
 
 def terasort_no_argos_run(vms, env):
     parallel(lambda vm: vm.install('hadoop'), vms)
