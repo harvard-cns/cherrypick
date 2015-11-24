@@ -31,11 +31,10 @@ echo -e $output > ~/attempts.json
 cat /etc/hosts | grep vm > ~/hosts
 """
 
-def collect_terasort_stats(master):
-    master.script(COLLECT_TERASORT_SCRIPT)
-    
-    master.recv('~/attempts.json', 'vm-attempts.json')
-    master.recv('~/hosts', 'vm-hosts')
+def collect_terasort_stats(vms):
+    parallel(lambda vm: vm.script(COLLECT_TERASORT_SCRIPT), vms)
+    parallel(lambda vm: vm.recv('~/attempts.json', 'vm-' + vm.name + '.json'), vms)
+    parallel(lambda vm: vm.recv('~/hosts', 'vm-hosts'), vms)
 
 def argos_start(vms):
     parallel(lambda vm: vm.script('rm -rf ~/argos/proc'), vms)
@@ -63,6 +62,7 @@ def terasort_with_argos_run(vms, env):
     parallel(lambda vm: vm.install('hadoop'), vms)
     parallel(lambda vm: vm.install('ntp'), vms)
     parallel(lambda vm: vm.install('argos'), vms)
+    parallel(lambda vm: vm.install('jq'), vms)
 
     cluster = HadoopCluster(vms[0], vms[1:], env.param('terasort:use_local_disk') != 'False')
     cluster.setup()
@@ -77,7 +77,7 @@ def terasort_with_argos_run(vms, env):
 
     argos_finish(vms)
 
-    collect_terasort_stats(cluster.master)
+    collect_terasort_stats(vms)
 
     terasort_time = cluster.master.script('sudo su - hduser -c "tail -n1 terasort.out"').strip()
     terasort_out = cluster.master.script('sudo su - hduser -c "cat output.log"').strip()

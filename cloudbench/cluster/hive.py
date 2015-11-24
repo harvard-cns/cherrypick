@@ -14,3 +14,7 @@ class HiveCluster(object):
             vm.script('sudo su {0} -c hadoop fs -mkdir /usr/hive/warehouse'.format(HADOOP_USER))
             vm.script('sudo su {0} -c hadoop fs -chmod g+w /usr/hive/warehouse'.format(HADOOP_USER))
         setup_hive(self.cluster.master)
+
+    @property
+    def master(self):
+        return self.hc_.master
