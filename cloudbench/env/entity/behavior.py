@@ -135,6 +135,11 @@ class LinuxFileSystem(FileSystem):
     def rmdir(self, name):
         return self.execute('rm -rf %s' % name)
 
+    def data_directories(self):
+        res = self.script("find /data/ -maxdepth 1 -mindepth 1")
+        data_directories = [l for l in res.split("\n") if l.startswith('/data')]
+        return data_directories
+
 class RsyncTransfer(Base):
     def __init__(self, *args, **kwargs):
         super(RsyncTransfer, self).__init__(*args, **kwargs)
