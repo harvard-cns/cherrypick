@@ -254,9 +254,19 @@ class AwsCloud(Cloud):
 
             storage_cmd = ''
             try:
-                if vm.storage_type is not None:
-                    storage_cmd = \
-                        '--block-device-mappings "[{\\"DeviceName\\": \\"/dev/sda1\\",\\"Ebs\\":{\\"VolumeSize\\":100, \\"VolumeType\\": \\"%s\\"}}]"' % vm.storage_type
+                if vm.storage is None:
+                    raise "No storage specified."
+                    
+                storage_specs = []
+                # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
+                storage_paths = map(lambda x: '/dev/sd' + x, list('fghijklmnop'))
+                storage_spec = '{\\"DeviceName\\": \\"%s\\",\\"Ebs\\":{\\"VolumeSize\\":%d, \\"VolumeType\\": \\"%s\\"}}'
+
+                for i in range(vm.storage_count):
+                    storage_specs.append(storage_spec % (storage_paths[i], vm.storage_size, vm.storage_type))
+
+                storage_cmd = \
+                    '--block-device-mappings "[%s]"' % ','.join(storage_specs)
             except Exception:
                 pass
 

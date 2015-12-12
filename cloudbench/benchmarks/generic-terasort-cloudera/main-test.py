@@ -41,55 +41,25 @@ def setup_base(env, vms):
     parallel(lambda vm: vm.install('java8'), vms)
     parallel(lambda vm: vm.install('cloudera'), vms)
     parallel(lambda vm: vm.install('git'), vms)
-    parallel(lambda vm: vm.install('hivetpch'), vms)
-    parallel(lambda vm: vm.install('tpch_rxin'), vms)
-
-def setup_spark(env, vms):
-    setup_base(env, vms)
-    ce = Cloudera(vms)
-    ce.install('Hadoop')
-    ce.install('Spark')
-    return ce['Spark']
-
-def setup_hive(env, vms):
-    setup_base(env, vms)
-    ce = Cloudera(vms)
-    ce.install('Hive')
-    return ce['Hive']
 
 def terasort(vms, env):
     hadoop = setup_hadoop(env, vms)
     print "Master is: %s" % hadoop.master.name
 
-    hadoop.execute('sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5.5.0.jar teragen -D mapred.map.tasks=100 300000000 /terasort-input')
+    hadoop.execute('sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5.5.0.jar teragen -D mapred.map.tasks={0} {1} /terasort-input'.format(env.param('terasort:mappers'), env.param('terasort:rows')))
 
-    hadoop.execute('/usr/bin/time -f \'%e\' -o terasort.out sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5.5.0.jar terasort -D mapred.reduce.tasks=20 /terasort-input /terasort-output')
+    argos_start(vms)
+    hadoop.execute('/usr/bin/time -f \'%e\' -o terasort.out sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5.5.0.jar terasort -D mapred.reduce.tasks={0} /terasort-input /terasort-output'.format(env.param('terasort:reducers')))
+    argos_finish(vms)
 
-def spark(vms, env):
-    spark = setup_spark(env, vms)
+    terasort_time = cluster.master.script('tail -n1 terasort.out').strip()
+    terasort_out = cluster.master.script('cat output.log').strip()
+    file_name = str(time.time()) + '-' + cluster.master.type
+    with open(file_name + ".time", 'w+') as f:
+        f.write(str(teragen_time) + "," + str(terasort_time))
 
-def hive(vms, env):
-    hive = setup_hive(env, vms)
-    return
-
-def tpch_cmd(cmd):
-    return 'cd ~/hive-testbench && %s' % cmd
-
-def tpch_run_query(master, query, scale):
-    master.script(tpch_cmd('/usr/bin/time -f \'%e\' -o timeout-{0}.out hive -i sample-queries-tpch/testbench.settings --database tpch_flat_orc_{0} -f {2}/q{1}_*.hive'.format(scale, query, TPCH_HIVE_DIR)))
-
-
-def tpch(vms, env):
-    hive = setup_hive(env, vms)
-    hive.master.script(tpch_cmd('./tpch-setup.sh {0}'.format(TPCH_SCALE)))
-
-    def execute_query(num):
-        tpch_run_query(hive.master, num, TPCH_SCALE)
-
-    start = time.time()
-    parallel(execute_query, TPCH_QUERIES)
-    end = time.time()
-    print "Total time: %.2f" % (end - start)
+    with open(file_name + ".out", 'w+') as f:
+        f.write(terasort_out)
 
 def run(env):
     vms = env.virtual_machines().values()

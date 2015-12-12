@@ -79,6 +79,7 @@ class ClouderaHadoop(ClouderaPackage):
         parallel(lambda vm: vm.script('sudo service hadoop-hdfs-datanode restart'), self.workers)
 
         self.master.script('sudo -u hdfs hdfs dfs -mkdir -p /tmp/hadoop-yarn')
+        self.master.script('sudo -u hdfs hdfs dfs -chmod -R 1777 /tmp')
         self.master.script('sudo -u hdfs hdfs dfs -chmod -R 1777 /tmp/hadoop-yarn')
 
     def restart_yarn(self):
@@ -163,6 +164,9 @@ class ClouderaHadoop(ClouderaPackage):
         self.restart_hdfs()
         parallel(lambda vm: setup_yarn(vm), self.nodes)
         self.restart_yarn()
+        self.master.script('sudo -u hdfs hdfs dfs -chmod -R 1777 /tmp')
+        self.master.script('sudo -u hdfs hdfs dfs -chmod -R 1777 /user')
+        self.master.script('sudo -u hdfs hdfs dfs -chmod -R 1777 /tmp/hadoop-yarn')
 
     def setup(self):
         self.install_master()
@@ -215,7 +219,8 @@ class ClouderaHive(ClouderaPackage):
         super(ClouderaHive, self).__init__(cloudera)
 
     HivePackages = [
-            'hive'
+            'hive',
+            'hive-metastore'
             ]
 
     @property
@@ -233,6 +238,22 @@ class ClouderaHive(ClouderaPackage):
             for package_name in ClouderaHive.HivePackages:
                 vm.package_manager.install(package_name)
         parallel(install_hive, self.nodes)
+
+        def setup_mysql():
+            vm = self.master
+            sqlFile = '/usr/lib/hive/setup-mysql-cloudbench.sql'
+            vm.install('mysql')
+            vm.script(write_template('hive-mysql', sqlFile))
+            vm.script('cat {0} | mysql -u root'.format(sqlFile))
+
+        def setup_hive(vm):
+            vm.script(write_template('hive-site', '/usr/lib/hive/conf/hive-site.xml',
+                master=self.master.name))
+
+        # Install mysql on the master
+        setup_mysql()
+        parallel(setup_hive, self.nodes)
+
         return True
 
 

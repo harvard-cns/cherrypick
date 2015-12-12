@@ -23,7 +23,7 @@
         <value>{namenodes}</value>
     </property>
     <property>
-        <name>dfs.datanode.name.dir</name>
+        <name>dfs.datanode.data.dir</name>
         <value>{datanodes}</value>
     </property>
     <property> 

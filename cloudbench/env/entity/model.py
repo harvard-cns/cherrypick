@@ -28,6 +28,50 @@ class VirtualMachine(Preemptable, EntityModel, Ubuntu):
         """ Returns the URL to this vm """
         return self.factory.address_virtual_machine(self)
 
+    @property
+    def storage_type(self):
+        if self.storage:
+            return self.storage.split('-')[0]
+        return None
+
+    @property
+    def storage_count(self):
+        if self.storage:
+            return int(self.storage.split('-')[1])
+        return None
+
+    @property
+    def storage_size(self):
+        if self.storage:
+            return int(self.storage.split('-')[2])
+        return None
+
+    @property
+    def storage(self):
+        if 'storage' in self.config:
+            return self.config['storage']
+
+        at_least_one_config = False
+        storage_type = 'gp2'
+        if 'storage-type' in self.config:
+            storage_type = self.config['storage-type']
+            at_least_one_config = True
+
+        storage_count = '1'
+        if 'storage-count' in self.config:
+            storage_count = self.config['storage-count']
+            at_least_one_config = True
+
+        storage_size = '100'
+        if 'storage-size' in self.config:
+            storage_size = self.config['storage-size']
+            at_least_one_config = True
+
+        if at_least_one_config:
+            return '%s-%s-%s' % (storage_type, storage_count, storage_size)
+
+        return None
+
 class VirtualNetwork(EntityModel):
     virtual_machines = has_many('VirtualMachine')
     location         = depends_on_one('Location')
