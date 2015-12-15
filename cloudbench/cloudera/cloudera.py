@@ -100,11 +100,20 @@ class ClouderaHadoop(ClouderaPackage):
                 mapmemheap = int(0.8 * mapmem)
                 reducememheap = int(0.8 * reducemem)
 
+                localdirs = []
+                for d in data_directories:
+                    localdirs.append("file://%s/hadoop-yarn/cache/\${user.name}/nm-local-dir" % d)
+
+                for d in data_directories:
+                    vm.script("mkdir -p %s/hadoop-yarn/cache" % d)
+                    vm.script("chmod -R 777 %s/hadoop-yarn" % d)
+
                 vm.script(write_template('yarn-site',
                     '/etc/hadoop/conf.my_cluster/yarn-site.xml',
                     master=self.master.name,
                     totalmem=total_memory,
                     totalcpu=total_cpu,
+                    localdirs=','.join(localdirs),
                     mapmem=mapmem,
                     mapmemheap=mapmemheap,
                     reducemem=reducemem,
@@ -133,9 +142,15 @@ class ClouderaHadoop(ClouderaPackage):
                 vm.script("update-alternatives --set hadoop-conf /etc/hadoop/conf.my_cluster")
 
             def setup_core_site():
+                data_directories = vm.data_directories()
+                tmpdir = data_directories[0] + '/hadoop-tmp'
+                vm.script('mkdir -p %s' % tmpdir)
+                vm.script('chmod 777 -R %s' % tmpdir)
+
                 vm.script(write_template('core-site',
                     '/etc/hadoop/conf.my_cluster/core-site.xml',
-                    master=self.master.name))
+                    master=self.master.name,
+                    tmpdir=tmpdir))
 
             def setup_mapred_site():
                 vm.script(write_template('mapred-site',

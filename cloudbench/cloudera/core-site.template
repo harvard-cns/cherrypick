@@ -22,4 +22,8 @@
         <name>fs.defaultFS</name>
         <value>hdfs://{master}:8020</value>
     </property>
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>{tmpdir}</value>
+    </property>
 </configuration>

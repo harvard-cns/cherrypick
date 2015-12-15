@@ -28,8 +28,9 @@ class Linux(RsyncTransfer, SecureShell, LinuxInstaller, LinuxFileSystem):
         return self.script("df -P / | tail -n 1 | awk '/.*/ { print $1 }'")
 
     def disks(self):
-        return filter(lambda x: x.startswith('/dev/'),
-                self.script("ls /dev/{sd,xvd}* 2>/dev/null | grep -v 1").split("\n"))
+        return filter(lambda x: not x.endswith(('a','b','c','d','e')),
+                    filter(lambda x: x.startswith('/dev/'),
+                        self.script("ls /dev/{sd,xvd}* 2>/dev/null | grep -v 1").split("\n")))
 
     def has_dir(self, path):
         output = self.script("if [ -d \"%s\" ]; then echo true; else echo false; fi" % path)
@@ -46,6 +47,7 @@ class Linux(RsyncTransfer, SecureShell, LinuxInstaller, LinuxFileSystem):
             self.script('partprobe')
             self.script('sudo mkfs.%s %s' % (disk_format, partition))
         self.script('mkdir -p %s' % path)
+        self.script('umount %s' % path)
         self.script('mount %s %s' % (partition, path))
 
 class Ubuntu(Linux):

@@ -1,7 +1,6 @@
 from cloudbench.ssh import WaitUntilFinished, WaitForSeconds
 from cloudbench.util import Debug, parallel
 from cloudbench.cloudera.cloudera import Cloudera
-from cloudbench.apps.hivetpch import TPCH_HIVE_DIR
 
 import re
 import time
