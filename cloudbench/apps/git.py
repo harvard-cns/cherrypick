@@ -1,7 +1,7 @@
 def install(vm):
     vm.package_manager.install('git')
 
-def is_installed(vm):
+def installed(vm):
     pass
 
 def remove(vm):
