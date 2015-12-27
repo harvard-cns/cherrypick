@@ -4,11 +4,11 @@
     </locations>
 
     <virtual-machines>
-        <virtual-machine name='vm1' storage-type="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
-        <virtual-machine name='vm2' storage-type="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
-        <virtual-machine name='vm3' storage-type="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
-        <virtual-machine name='vm4' storage-type="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
-        <virtual-machine name='vm5' storage-type="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm1' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <!--<virtual-machine name='vm2' storage="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm3' storage="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm4' storage="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm5' storage="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>-->
     </virtual-machines>
 
     <virtual-networks>

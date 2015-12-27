@@ -94,7 +94,7 @@ class ClouderaHadoop(ClouderaPackage):
             def setup_yarn_site():
                 data_directories = vm.data_directories()
                 total_cpu = vm.cpus()
-                total_memory = int(vm.memory() / (1024 * 1024)) - 1024
+                total_memory = int(vm.memory() / (1024 * 1024)) - 2048
                 mapmem = total_memory/total_cpu
                 reducemem = mapmem
                 mapmemheap = int(0.8 * mapmem)

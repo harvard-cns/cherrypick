@@ -32,6 +32,16 @@ class Linux(RsyncTransfer, SecureShell, LinuxInstaller, LinuxFileSystem):
                     filter(lambda x: x.startswith('/dev/'),
                         self.script("ls /dev/{sd,xvd}* 2>/dev/null | grep -v 1").split("\n")))
 
+    def local_disks_except_root(self):
+        return filter(lambda x: not x.endswith(('a')),
+                    filter(lambda x: x.startswith('/dev/'),
+                        self.script("ls /dev/{sd,xvd}* 2>/dev/null | grep -v 1").split("\n")))
+
+    def all_disks_except_root(self):
+        return filter(lambda x: not x.endswith(('a')),
+                    filter(lambda x: x.startswith('/dev/'),
+                        self.script("ls /dev/{sd,xvd}* 2>/dev/null | grep -v 1").split("\n")))
+
     def has_dir(self, path):
         output = self.script("if [ -d \"%s\" ]; then echo true; else echo false; fi" % path)
         if output.strip() == 'true':

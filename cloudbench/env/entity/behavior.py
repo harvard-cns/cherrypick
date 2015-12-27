@@ -128,12 +128,25 @@ class FileSystem(Base):
 class LinuxFileSystem(FileSystem):
     def __init__(self, *args, **kwargs):
         super(LinuxFileSystem, self).__init__(*args, **kwargs)
+        self.iotop_installed_ = False
 
     def mkdir(self, name):
         return self.execute('mkdir %s' % name)
 
     def rmdir(self, name):
         return self.execute('rm -rf %s' % name)
+
+    def monitor(self):
+        if not self.iotop_installed_:
+            self.install('iotop')
+        self.stop_monitor()
+        self.script('sudo nohup iotop -P -k -o -qq -d 1 -t >/tmp/vm-disk-monitor.log 2>&1 &')
+
+    def stop_monitor(self):
+        self.script('sudo pkill iotop')
+
+    def download_monitor(self, path):
+        self.recv('/tmp/vm-disk-monitor.log', path)
 
     def data_directories(self):
         res = self.script("find /data/ -maxdepth 1 -mindepth 1")
