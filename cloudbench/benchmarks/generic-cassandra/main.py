@@ -8,20 +8,40 @@ import time
 
 TIMEOUT=21600
 
-def cassandra_test(vms, env):
+def setup_disks(env, vms):
+    def setup_vm_disks(vm):
+        root = vm.root_disk()
+        disks = vm.disks()
+        disk_id = 2
+
+        if len(disks) == 0:
+            disks = vm.local_disks_except_root()
+
+        for disk in disks:
+            if root.startswith(disk):
+                continue
+            vm.mount(disk, '/data/%d' % disk_id, force_format=True)
+            disk_id += 1
+    parallel(setup_vm_disks, vms)
+
+def cassandra_test(all_vms, env):
+    testVmCount = len(all_vms)/3
+
+    benchmarkVms = all_vms[:testVmCount]
+    vms = all_vms[testVmCount:]
+
     parallel(lambda x: x.install('cassandra'), vms)
     parallel(lambda vm: vm.install('argos'), vms)
 
-    CassandraData = '/cassandra-data'
-    def setup_disk(vm):
-        vm.mount('/dev/xvdb', CassandraData, force_format='True')
+    setup_disks(env, vms)
 
     parallel(setup_disk, vms)
-    cluster = CassandraCluster(vms, CassandraData)
+    cluster = CassandraCluster(vms)
     cluster.kill()
     cluster.reset()
     cluster.setup()
     cluster.start()
+    return
 
     output = {}
 

@@ -72,6 +72,9 @@ def terasort(vms, env):
 
     hadoop.execute('sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar teragen -D mapred.map.tasks={0} {1} /terasort-input'.format(env.param('terasort:mappers'), env.param('terasort:rows')))
 
+    # Drop file caches to be more accurate for amount of reads and writes
+    parallel(lambda vm: vm.script("sync; echo 3 > /proc/sys/vm/drop_caches"), vms)
+
     monitor_start(vms)
     hadoop.execute('/usr/bin/time -f \'%e\' -o terasort.out sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar terasort -D mapred.reduce.tasks={0} /terasort-input /terasort-output >output.log 2>&1'.format(env.param('terasort:reducers')))
     monitor_finish(vms)

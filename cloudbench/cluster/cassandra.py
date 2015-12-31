@@ -25,12 +25,12 @@ endpoint_snitch: %s
 """
 
 class CassandraCluster(Cluster):
-    def __init__(self, vms, datapath='/cassandra-data', name='MyCassandraCluster', snitch='RackInferringSnitch'):
+    def __init__(self, vms, name='MyCassandraCluster', snitch='RackInferringSnitch'):
         self._snitch = snitch
         self._nodes = vms
         self._seed = vms[0]
         self._name = name
-        self._datapath = datapath
+        #self._datapath = 
 
     @property
     def name(self):
@@ -92,9 +92,6 @@ class CassandraCluster(Cluster):
         with open(yaml, 'r') as f:
             basedata = f.read()
 
-        conndata = CassandraTemplate % (
-                    ','.join(self.seed_ips),
-                    self.datapath, self.datapath)
 
         def write_yaml(vm):
             pernodedata = CassandraBase % (
@@ -102,6 +99,17 @@ class CassandraCluster(Cluster):
                     vm.intf_ip('eth0'),
                     vm.intf_ip('eth0'),
                     self.snitch)
+
+            vm_parts = vm.data_directories()
+
+            data_dirs = ("/data\n    - ").join(vm_parts)
+            commit_dirs = vm_parts[0]
+            if len(vm_parts) > 1:
+                data_dirs = ("/data\n    - ").join(vm_parts[1:])
+
+            conndata = CassandraTemplate % (
+                        ','.join(self.seed_ips),
+                        data_dirs, commit_dirs)
 
             config = "\n".join([basedata, pernodedata, conndata])
             vm.script('sudo cat <<EOT > {0}/conf/cassandra.yaml\n{1}\nEOT'.format(CASSANDRA_PATH, config))

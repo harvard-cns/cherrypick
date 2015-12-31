@@ -258,6 +258,7 @@ class AwsCloud(Cloud):
                     raise "No storage specified."
                     
                 storage_specs = []
+
                 # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
                 storage_paths = map(lambda x: '/dev/sd' + x, list('fghijklmnop'))
                 storage_spec = '{\\"DeviceName\\": \\"%s\\",\\"Ebs\\":{\\"VolumeSize\\":%d, \\"VolumeType\\": \\"%s\\"}}'
@@ -270,9 +271,20 @@ class AwsCloud(Cloud):
             except Exception:
                 pass
 
+            extra_cmd = []
+
+            # Instances that are not automatically ebs optimized but can be made to do so
+            can_ebs_optimized_instances = [
+                    "c1.xlarge" , "c3.xlarge" , "c3.2xlarge", "c3.4xlarge",
+                    "g2.2xlarge", "i2.xlarge" , "i2.2xlarge", "i2.4xlarge",
+                    "m1.large"  , "m1.xlarge" , "m2.2xlarge", "m2.4xlarge",
+                    "m3.xlarge" , "m3.2xlarge", "r3.xlarge" , "r3.2xlarge",
+                    "r3.4xlarge"]
+
+            if vm.type in can_ebs_optimized_instances: extra_cmd.append('--ebs-optimized')
             ret = self.exe('run-instances --image-id %s --count 1 \
                     --instance-type %s --key-name=cloud %s\
-                    %s --query "Instances[0].InstanceId"' % (vm.image, vm.type, net_cmd, storage_cmd), output)
+                    %s %s --query "Instances[0].InstanceId"' % (vm.image, vm.type, net_cmd, storage_cmd, ' '.join(extra_cmd)), output)
 
             if ret:
                     self.data[self.vm_name(vm)] = output['stdout'].strip()
