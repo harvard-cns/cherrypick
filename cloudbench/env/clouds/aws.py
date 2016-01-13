@@ -273,6 +273,21 @@ class AwsCloud(Cloud):
 
             extra_cmd = []
 
+            def ephemeral_storage_mapping(count=1):
+                storage_spec = '{\\"DeviceName\\": \\"%s\\",\\"VirtualName\\": \\"%s\\"}'
+                disks = map(chr, range(ord('b'),ord('b')+count))
+
+                storage_disks = []
+
+                eph_disk = 0
+                for disk in disks:
+                    storage_disks.append(storage_spec % ('/dev/sd' + disk, "ephemeral" + str(eph_disk)))
+                    eph_disk += 1
+
+                storage_cmd = '--block-device-mappings "[%s]"' % ','.join(storage_disks)
+                return storage_cmd
+
+
             # Instances that are not automatically ebs optimized but can be made to do so
             can_ebs_optimized_instances = [
                     "c1.xlarge" , "c3.xlarge" , "c3.2xlarge", "c3.4xlarge",
@@ -281,7 +296,20 @@ class AwsCloud(Cloud):
                     "m3.xlarge" , "m3.2xlarge", "r3.xlarge" , "r3.2xlarge",
                     "r3.4xlarge"]
 
-            if vm.type in can_ebs_optimized_instances: extra_cmd.append('--ebs-optimized')
+            can_ephemeral_instances = {
+                    'i2.xlarge' : 1,
+                    'i2.2xlarge': 2,
+                    'i2.4xlarge': 4,
+                    'i2.8xlarge': 8}
+
+            if vm.type in can_ebs_optimized_instances:
+                extra_cmd.append('--ebs-optimized')
+
+            if vm.type in can_ephemeral_instances:
+                extra_cmd.append(
+                        ephemeral_storage_mapping(
+                            can_ephemeral_instances[vm.type]))
+
             ret = self.exe('run-instances --image-id %s --count 1 \
                     --instance-type %s --key-name=cloud %s\
                     %s %s --query "Instances[0].InstanceId"' % (vm.image, vm.type, net_cmd, storage_cmd, ' '.join(extra_cmd)), output)

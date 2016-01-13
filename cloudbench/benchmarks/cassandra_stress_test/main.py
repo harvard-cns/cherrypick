@@ -21,35 +21,33 @@ def setup_disks(env, vms):
             if root.startswith(disk):
                 continue
             vm.mount(disk, '/data/%d' % disk_id, force_format=True)
+            vm.script("chmod 777 -R /data/%d" % disk_id)
             disk_id += 1
     parallel(setup_vm_disks, vms)
 
 def cassandra_test(all_vms, env):
-    testVmCount = len(all_vms)/3
+    test_vm_count = len(all_vms)/3
 
-    benchmarkVms = all_vms[:testVmCount]
-    vms = all_vms[testVmCount:]
+    benchmark_vms = all_vms[:test_vm_count]
+    vms = all_vms[test_vm_count:]
 
-    parallel(lambda x: x.install('cassandra'), vms)
+    parallel(lambda x: x.install('cassandra'), all_vms)
     parallel(lambda vm: vm.install('argos'), vms)
 
     setup_disks(env, vms)
-
-    parallel(setup_disk, vms)
-    cluster = CassandraCluster(vms)
+    cluster = CassandraCluster(vms, benchmark_vms)
     cluster.kill()
     cluster.reset()
     cluster.setup()
     cluster.start()
-    return
 
     output = {}
 
-    output['write'] = cluster.stress_test_write(1000000)
+    output['write'] = cluster.stress_test_write(int(env.param('cassandra:record_count')))
     #output['read']  = cluster.stress_test_read()
     output['mix']   = cluster.stress_test_mixed(write=1, read=4)
 
-    thread_count_max_throughtput = int(output['mix'].split("\n")[-6].split(" ")[0])
+    thread_count_max_throughtput = int(output['mix'][0].split("\n")[-6].split(" ")[0])
 
     parallel(lambda vm: vm.script('rm -rf ~/argos/proc'), vms)
     parallel(lambda vm: vm.script('cd argos; sudo nohup src/argos >argos.out 2>&1 &'), vms)
@@ -58,7 +56,7 @@ def cassandra_test(all_vms, env):
     output['throughput'] = cluster.stress_test_mixed_with_thread_count(
             write=1,
             read=4,
-            count=1000000,
+            count=int(env.param('cassandra:record_count')),
             thread_count=thread_count_max_throughtput)
 
     parallel(lambda vm: vm.script('sudo killall -SIGINT argos'), vms)
@@ -67,8 +65,13 @@ def cassandra_test(all_vms, env):
     parallel(lambda vm: vm.recv('~/argos/proc', vm.name + '-proc'), vms)
     parallel(lambda vm: vm.recv('~/argos/argos.out', vm.name + '-argos.out'), vms)
 
-    with open('throughput-' + cluster.seeds[0].type + '.throughput', 'w+') as f:
-        f.write(output['throughput'].split("\n")[-3])
+    idx = 0
+    for thr in output['throughput']:
+        with open('throughput-'  + str(idx) + '-' + cluster.seeds[0].type + '.throughput', 'w+') as f:
+            f.write(thr.split("\n")[-3])
+        with open('log-'  + str(idx) + '-' + cluster.seeds[0].type + '.throughput', 'w+') as f:
+            f.write(thr)
+        idx += 1
 
 def run(env):
     vms = env.virtual_machines().values()

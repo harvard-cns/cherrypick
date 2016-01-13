@@ -49,7 +49,7 @@ def setup_disks(env, vms):
         disks = vm.disks()
         disk_id = 2
 
-        if len(disks) == 0:
+        if len(disks) == 0 or vm.type == 'i2.8xlarge':
             disks = vm.local_disks_except_root()
 
         for disk in disks:
@@ -70,13 +70,17 @@ def terasort(vms, env):
     hadoop = setup_hadoop(env, vms)
     print "Master is: %s" % hadoop.master.name
 
-    hadoop.execute('sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar teragen -D mapred.map.tasks={0} {1} /terasort-input'.format(env.param('terasort:mappers'), env.param('terasort:rows')))
+    extra_teragen_params = "-Ddfs.blocksize=512M -Dmapreduce.task.io.sort.mb=256"
+    hadoop.execute('sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar teragen {2} -D mapred.map.tasks={0} {1} /terasort-input'.format(env.param('terasort:mappers'), env.param('terasort:rows'), extra_teragen_params))
 
     # Drop file caches to be more accurate for amount of reads and writes
     parallel(lambda vm: vm.script("sync; echo 3 > /proc/sys/vm/drop_caches"), vms)
 
+    reducer_count = int(sum(map(lambda vm: vm.cpus(), vms)) * 0.8)
+
+    extra_terasort_params = "-Ddfs.blocksize=512M -Dmapreduce.task.io.sort.factor=100 -Dmapreduce.task.io.sort.mb=384 -Dio.file.buffer.size=131072"
     monitor_start(vms)
-    hadoop.execute('/usr/bin/time -f \'%e\' -o terasort.out sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar terasort -D mapred.reduce.tasks={0} /terasort-input /terasort-output >output.log 2>&1'.format(env.param('terasort:reducers')))
+    hadoop.execute('/usr/bin/time -f \'%e\' -o terasort.out sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar terasort {1} -D mapred.reduce.tasks={0} /terasort-input /terasort-output >output.log 2>&1'.format(str(reducer_count), extra_terasort_params))
     monitor_finish(vms)
 
     terasort_time = hadoop.master.script('tail -n1 terasort.out').strip()

@@ -22,4 +22,19 @@
         <name>mapreduce.framework.name</name>
         <value>{framework}</value>
     </property>
+
+    <property>
+        <name>mapreduce.map.output.compress</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>mapreduce.map.output.compress.codec</name>
+        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+    </property>
+
+    <property>
+        <name>mapreduce.job.reduce.slowstart.completedmaps</name>
+        <value>0.99</value>
+    </property>
 </configuration>
