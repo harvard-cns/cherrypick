@@ -31,6 +31,7 @@ class Rsync(object):
 
     def recv(self, source, dest):
         self._lock.acquire()
+        print("rsync -avz -e 'ssh -i ../config/cloud.key -oStrictHostKeyChecking=no -q' {0}:{1} {2}".format(self.connect_string, source , dest))
         self._process = subprocess.Popen(shlex.split(
             "rsync -avz -e 'ssh -i ../config/cloud.key -oStrictHostKeyChecking=no -q' {0}:{1} {2}".format(
                     self.connect_string, source , dest)), 

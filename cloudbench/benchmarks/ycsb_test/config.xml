@@ -35,10 +35,8 @@
     </azure>
 
     <aws>
-        <config name='ubuntu' value='ami-0021766a' />
-        <!--<config name='ubuntu' value='ami-bf3dccfb' />-->
-        <config name='us'   value='us-east-1' />
-        <!--<config name='us'   value='us-west-1' />-->
+        <config name='ubuntu' value='ami-bf3dccfb' />
+        <config name='us'   value='us-west-1' />
 
         <virtual-networks>
             <add-values name='vn1' address-range='10.0.0.0/20' />

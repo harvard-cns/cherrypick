@@ -7,10 +7,12 @@
         <virtual-machine name='vm1' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
         <virtual-machine name='vm2' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
         <virtual-machine name='vm3' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
-        <!--<virtual-machine name='vm2' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
-        <virtual-machine name='vm3' storage="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
-        <virtual-machine name='vm4' storage="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
-        <virtual-machine name='vm5' storage="global:storage-type" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>-->
+        <virtual-machine name='vm4' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm5' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm6' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm7' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm8' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm9' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
     </virtual-machines>
 
     <virtual-networks>
@@ -18,8 +20,7 @@
     </virtual-networks>
 
     <security-groups>
-        <!-- <security-group name='sec1' private-port='8042' public-port='8042' protocol='tcp' virtual-machines='vm1,vm2,vm3,vm4,vm5' /> -->
-        <security-group name='sec2' private-port='8088' public-port='8088' protocol='tcp' virtual-machines='vm1,vm2,vm3' />
+        <security-group name='sec2' private-port='8088' public-port='8088' protocol='tcp' virtual-machines='vm1,vm2,vm3,vm4,vm5,vm6,vm7,vm8,vm9' />
     </security-groups>
 
     <azure>
@@ -35,10 +36,8 @@
     </azure>
 
     <aws>
-        <config name='ubuntu' value='ami-0021766a' />
-        <!--<config name='ubuntu' value='ami-bf3dccfb' />-->
-        <config name='us'   value='us-east-1' />
-        <!--<config name='us'   value='us-west-1' />-->
+        <config name='ubuntu' value='ami-bf3dccfb' />
+        <config name='us'   value='us-west-1' />
 
         <virtual-networks>
             <add-values name='vn1' address-range='10.0.0.0/20' />

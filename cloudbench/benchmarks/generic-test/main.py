@@ -91,7 +91,38 @@ def tpch(vms, env):
     end = time.time()
     print "Total time: %.2f" % (end - start)
 
+def setup_disks(env, vms):
+    def setup_vm_disks(vm):
+        root = vm.root_disk()
+        disks = vm.disks()
+        disk_id = 2
+
+        if len(disks) == 0:
+            disks = vm.local_disks_except_root()
+
+        for disk in disks:
+            if root.startswith(disk):
+                continue
+            vm.mount(disk, '/data/%d' % disk_id, force_format=True)
+            vm.script("chmod 777 -R /data/%d" % disk_id)
+            disk_id += 1
+    parallel(setup_vm_disks, vms)
+
+def ycsb(vms, env):
+    from cloudbench.cluster.cassandra import CassandraCluster
+    parallel(lambda vm: vm.install('cassandra'), vms)
+    partition_length = len(vms)/3
+    t_vms = vms[:partition_length]
+    c_vms = vms[partition_length:]
+
+    setup_disks(env, vms)
+    cluster = CassandraCluster(c_vms, t_vms)
+    cluster.kill()
+    cluster.reset()
+    cluster.setup()
+    cluster.start()
+
 def run(env):
     vms = env.virtual_machines().values()
-    env.benchmark.executor(vms, tpch)
+    env.benchmark.executor(vms, spark)
     env.benchmark.executor.run()

@@ -45,6 +45,7 @@ def setup_hadoop(env, vms):
 
 def setup_disks(env, vms):
     def setup_vm_disks(vm):
+        vm.script('rm -rf /data/1/')
         root = vm.root_disk()
         disks = vm.disks()
         disk_id = 2
