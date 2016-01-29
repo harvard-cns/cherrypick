@@ -1,3 +1,4 @@
+import math
 from .template import write_template 
 from cloudbench.util import Debug, parallel
 
@@ -113,6 +114,8 @@ class ClouderaHadoop(ClouderaPackage):
                     master=self.master.name,
                     totalmem=total_memory,
                     totalcpu=total_cpu,
+                    clustermem=total_memory*len(self.nodes),
+                    clustercpu=total_cpu*len(self.nodes),
                     localdirs=','.join(localdirs),
                     mapmem=mapmem,
                     mapmemheap=mapmemheap,
@@ -218,9 +221,24 @@ class ClouderaSpark(ClouderaPackage):
         hadoop.execute('sudo -u hdfs hdfs dfs -chown -R spark:spark /user/spark')
         hadoop.execute('sudo -u hdfs hdfs dfs -chmod 1777 /user/spark/applicationHistory')
 
+        per_node_cpu= self.master.cpus()
+        cluster_cpu = per_node_cpu* len(self.nodes)
+        total_memory = int(self.master.memory() / (1024 * 1024)) - 2048
+
+        # executor_memory = int(total_memory/(per_node_cpu*1024))
+        # executor_count = cluster_cpu
+        # executor_cores = 1
+
+        executor_memory = int(math.ceil((total_memory - 5.0*1024/len(self.nodes) - 1024)*0.90))
+        executor_count = len(self.nodes)
+        executor_cores = per_node_cpu
+
         self.master.script(write_template('spark-defaults.conf',
             '/etc/spark/conf/spark-defaults.conf',
-            master=self.master.name))
+            master=self.master.name,
+            instances=executor_count,
+            cores=executor_cores,
+            memory=(str(executor_memory) + 'm')))
 
         self.master.script('sudo service spark-history-server restart')
         return True
