@@ -95,7 +95,7 @@ class ClouderaHadoop(ClouderaPackage):
             def setup_yarn_site():
                 data_directories = vm.data_directories()
                 total_cpu = vm.cpus()
-                total_memory = int(vm.memory() / (1024 * 1024)) - 2048
+                total_memory = int(vm.memory() / (1024 * 1024)) - 512
                 mapmem = total_memory/total_cpu
                 reducemem = mapmem
                 mapmemheap = int(0.8 * mapmem)
@@ -223,15 +223,15 @@ class ClouderaSpark(ClouderaPackage):
 
         per_node_cpu= self.master.cpus()
         cluster_cpu = per_node_cpu* len(self.nodes)
-        total_memory = int(self.master.memory() / (1024 * 1024)) - 2048
+        total_memory = int(self.master.memory() / (1024 * 1024)) - 1024
 
         # executor_memory = int(total_memory/(per_node_cpu*1024))
         # executor_count = cluster_cpu
         # executor_cores = 1
 
-        executor_memory = int(math.ceil((total_memory - 5.0*1024/len(self.nodes) - 1024)*0.90))
-        executor_count = len(self.nodes)
-        executor_cores = per_node_cpu
+        executor_count = cluster_cpu
+        executor_cores = 1
+        executor_memory = int(math.ceil(total_memory*executor_cores/per_node_cpu)*0.5)#int(math.ceil((total_memory - 5.0*1024/len(self.nodes) - 1024)*0.90))
 
         self.master.script(write_template('spark-defaults.conf',
             '/etc/spark/conf/spark-defaults.conf',

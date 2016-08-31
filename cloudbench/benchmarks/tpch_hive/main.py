@@ -4,11 +4,16 @@ from cloudbench.cloudera.cloudera import Cloudera
 from cloudbench.apps.hivetpch import TPCH_HIVE_DIR
 
 import os
+import random
 import re
 import time
 
 TIMEOUT=21600
-TPCH_QUERIES=[2, 6, 11, 13, 14, 15, 16, 20]
+BASE_QUERIES=[2, 6, 11, 13, 14, 15, 16, 20]
+
+rng = random.Random()
+rng.seed(4)
+TPCH_QUERIES=[rng.choice(BASE_QUERIES) for i in range(1,20)]
 
 def argos_start(vms, directory, iteration):
     parallel(lambda vm: vm.script('rm -rf ~/argos/proc'), vms)
