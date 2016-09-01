@@ -24,6 +24,10 @@ class ClouderaHadoop(ClouderaPackage):
         # Everyone is a worker
         self.workers_ = cloudera.nodes
 
+        if len(cloudera.nodes) > 10:
+            # If we have more than ten cloudera nodes, dedicate the master to management
+            self.workers_ = cloudera.nodes[1:]
+
         super(ClouderaHadoop, self).__init__(cloudera)
 
     @property
