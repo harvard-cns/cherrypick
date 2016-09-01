@@ -89,13 +89,27 @@ class ClouderaHadoop(ClouderaPackage):
         self.master.script('sudo service hadoop-mapreduce-historyserver restart')
         parallel(lambda vm: vm.script('sudo service hadoop-yarn-nodemanager restart'), self.workers)
 
+    def available_memory(self, vm):
+        #return int(vm.memory() / (1024 * 1024)) - 512
+        ram_mb = int(vm.memory() / (1024*1024))
+        if ram_mb > 100*1024:
+            return ram_mb - 15 * 1024
+        elif ram_mb > 60*1024:
+            return ram_mb - 10 * 1024
+        elif ram_mb > 40*1024:
+            return ram_mb - 6 * 1024
+        elif ram_mb > 20*1024:
+            return ram_mb - 3 * 1024
+        elif ram_mb > 10*1024:
+            return ram_mb - 2 * 1024
+        return max(512, ram_mb - 2300)
 
     def setup_configuration(self):
-        def setup_yarn(vm):
+        def setup_yarn(vm, is_master):
             def setup_yarn_site():
                 data_directories = vm.data_directories()
                 total_cpu = vm.cpus()
-                total_memory = int(vm.memory() / (1024 * 1024)) - 512
+                total_memory = self.available_memory(vm)
                 mapmem = total_memory/total_cpu
                 reducemem = mapmem
                 mapmemheap = int(0.8 * mapmem)
@@ -180,7 +194,7 @@ class ClouderaHadoop(ClouderaPackage):
         parallel(lambda vm: setup_hdfs(vm), self.nodes)
         self.master.script('sudo -u hdfs hdfs namenode -format')
         self.restart_hdfs()
-        parallel(lambda vm: setup_yarn(vm), self.nodes)
+        parallel(lambda vm: setup_yarn(vm, vm == self.master), self.nodes)
         self.restart_yarn()
         self.master.script('sudo -u hdfs hdfs dfs -chmod -R 1777 /tmp')
         self.master.script('sudo -u hdfs hdfs dfs -chmod -R 1777 /user')

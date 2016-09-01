@@ -405,7 +405,8 @@ class AwsCloud(Cloud):
         with self.lock:
             self.to_location_of(vnet)
             output = {}
-            ret = self.exe('describe-availability-zones --query "AvailabilityZones[*].ZoneName"', output)
+            ret = self.exe('describe-availability-zones --region {0} --query "AvailabilityZones[*].ZoneName"'.format(self.location_of(vnet)), output)
+            print output
             return json.loads(output['stdout'])
 
     def create_virtual_network(self, vnet):

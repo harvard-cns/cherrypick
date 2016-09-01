@@ -23,3 +23,23 @@ bin/
 !bin/cb
 !bin/execute.sh
 !bin/*-*.sh
+
+# Ignore all the non-essential root folders
+terasort-*/
+tpch-*/
+ycsb-*/
+spark-*/
+exp*/
+mpi-*/
+cassandra-*/
+benchmark-*/
+
+cloudbench/benchmarks/c4-*
+cloudbench/benchmarks/m4-*
+cloudbench/benchmarks/r3-*
+cloudbench/benchmarks/sp12-*
+cloudbench/benchmarks/sp2-*
+cloudbench/benchmarks/tmp_*
+cloudbench/benchmarks/tpch_*
+cloudbench/benchmarks/ts2-*
+

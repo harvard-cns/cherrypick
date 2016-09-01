@@ -10,7 +10,7 @@ import time
 
 TIMEOUT=21600
 
-TPCDS_SCALE=50
+TPCDS_SCALE=10
 GenerateTPCDS = """
 import com.databricks.spark.sql.perf.tpcds.Tables
 
@@ -107,19 +107,28 @@ def makedirectory(name):
     if not os.path.exists(name):
         os.makedirs(name)
 
+def spark_executor_memory(vm):
+    return int(spark_driver_memory(vm) / vm.cpus())
+
 def spark_driver_memory(vm):
     ram_mb = int(vm.memory() / (1024*1024))
+    ret = ram_mb
     if ram_mb > 100*1024:
-        return ram_mb - 15 * 1024
+        ret =  ram_mb - 15 * 1024
     elif ram_mb > 60*1024:
-        return ram_mb - 10 * 1024
+        ret =  ram_mb - 10 * 1024
     elif ram_mb > 40*1024:
-        return ram_mb - 6 * 1024
+        ret =  ram_mb - 6 * 1024
     elif ram_mb > 20*1024:
-        return ram_mb - 3 * 1024
+        ret =  ram_mb - 3 * 1024
     elif ram_mb > 10*1024:
-        return ram_mb - 2 * 1024
-    return max(512, ram_mb - 2000)
+        ret =  ram_mb - 2 * 1024
+    else:
+        ret =  max(512, ram_mb - 2300)
+
+    ret -= max(400, ret*0.2)
+
+    return int(ret)
 
 def tpcds(vms, env):
     spark = setup_spark(vms, env)
@@ -140,11 +149,11 @@ def tpcds(vms, env):
 
     #
     def exec_tpcds_script(master, script, output):
-        cmdTpl = "spark-shell --jars {0} --conf spark.driver.memory={1}m -i {2} |& tee {3}"
+        cmdTpl = "spark-shell --jars {0} --conf spark.driver.memory={1}m -i {2} --conf spark.executor.memory={4}m |& tee {3}"
         cmd = cmdTpl.format(os.path.join(SPARK_SQL_PERF_DIR, 
             "target", "scala-2.10", "spark-sql-perf_2.10-0.3.2.jar"),
             spark_driver_memory(master),
-            script, output)
+            script, output, spark_executor_memory(master))
         master.script(cmd)
 
     
@@ -161,7 +170,7 @@ def tpcds(vms, env):
     ## Generate TPCDS data
     exec_tpcds_script(spark.master, genFile, os.path.join(SPARK_SQL_PERF_DIR, "gen.log"))
     ## Execute TPCDS queries
-    exec_tpcds_script(spark.master, exeFile, os.path.join(SPARK_SQL_PERF_DIR, "exec.log"))
+    exec_tpcds_script(spark.master, exeFile, os.path.join(SPARK_SQL_PERF_DIR, "exe.log"))
 
 def run(env):
     vms = env.virtual_machines().values()
