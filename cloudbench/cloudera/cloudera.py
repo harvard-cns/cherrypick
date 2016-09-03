@@ -24,9 +24,9 @@ class ClouderaHadoop(ClouderaPackage):
         # Everyone is a worker
         self.workers_ = cloudera.nodes
 
-        if len(cloudera.nodes) > 6:
+        #if len(cloudera.nodes) > 6:
             # If we have more than ten cloudera nodes, dedicate the master to management
-            self.workers_ = cloudera.nodes[1:]
+        self.workers_ = cloudera.nodes[1:]
 
         super(ClouderaHadoop, self).__init__(cloudera)
 
@@ -107,7 +107,7 @@ class ClouderaHadoop(ClouderaPackage):
             return ram_mb - 3 * 1024
         elif ram_mb > 10*1024:
             return ram_mb - 2 * 1024
-        return max(512, ram_mb - 1500)
+        return max(512, ram_mb - 1300)
 
     def setup_configuration(self):
         def setup_yarn(vm, is_master):
@@ -134,8 +134,8 @@ class ClouderaHadoop(ClouderaPackage):
                     master=self.master.name,
                     totalmem=total_memory,
                     totalcpu=total_cpu,
-                    clustermem=total_memory*len(self.nodes),
-                    clustercpu=total_cpu*len(self.nodes),
+                    # clustermem=total_memory*len(self.nodes),
+                    # clustercpu=total_cpu*len(self.nodes),
                     localdirs=','.join(localdirs),
                     ammem=ammem,
                     mapmem=mapmem,
@@ -267,6 +267,10 @@ class ClouderaSpark(ClouderaPackage):
     @property
     def master(self):
         return self.cloudera['Hadoop'].master
+
+    @property
+    def workers(self):
+        return self.cloudera['Hadoop'].workers
 
 class ClouderaHive(ClouderaPackage):
     def __init__(self, cloudera):

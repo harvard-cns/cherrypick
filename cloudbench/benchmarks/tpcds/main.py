@@ -149,17 +149,22 @@ def tpcds(vms, env):
         write_file(vm, exeFile, ExecuteTPCDS)
 
     #
-    def exec_tpcds_script(master, script, output, extra=""):
+    def exec_tpcds_script(master, slave, script, output, extra=""):
         cmdTpl = "spark-shell --jars {0} --conf spark.driver.memory={1}m -i {2} --conf spark.executor.memory={4}m {5} |& tee {3}"
         cmd = cmdTpl.format(os.path.join(SPARK_SQL_PERF_DIR, 
             "target", "scala-2.10", "spark-sql-perf_2.10-0.3.2.jar"),
             spark_driver_memory(master),
-            script, output, spark_executor_memory(master), extra)
+            script, output, spark_executor_memory(slave), extra)
         master.script(cmd)
 
+    # For some reason the Namenode was failing here ...
+    # TODO: debug here ...
+    spark.master.script("sudo service hadoop-hdfs-namenode restart")
+    spark.master.script("sudo service hadoop-yarn-resourcemanager restart")
+    spark.master.script("sudo -u hdfs hdfs dfs -mkdir -p /user/spark")
     
     # Make hdfs read/write/executable by anyone
-    spark.master.script("sudo -u hdfs hdfs chmod -R 777 /")
+    spark.master.script("sudo -u hdfs hdfs dfs chmod -R 777 /")
 
     # prepare spark
     parallel(prepare_spark, vms)
@@ -173,13 +178,13 @@ def tpcds(vms, env):
 
     # execute scripts
     ## Generate TPCDS data
-    exec_tpcds_script(spark.master, genFile, os.path.join(SPARK_SQL_PERF_DIR, "gen.log"), "--conf spark.yarn.executor.memoryOverhead=768")
+    exec_tpcds_script(spark.master, spark.workers[0], genFile, os.path.join(SPARK_SQL_PERF_DIR, "gen.log"), "--conf spark.yarn.executor.memoryOverhead=768")
 
     parallel(lambda vm: vm.script("sync; echo 3 > /proc/sys/vm/drop_caches"), vms)
     ## Execute TPCDS queries
     argos_start(vms, directory, iteration)
     start = time.time()
-    exec_tpcds_script(spark.master, exeFile, os.path.join(SPARK_SQL_PERF_DIR, "exe.log"))
+    exec_tpcds_script(spark.master, spark.workers[0], exeFile, os.path.join(SPARK_SQL_PERF_DIR, "exe.log"))
     end = time.time()
     argos_finish(vms, directory, iteration)
 
