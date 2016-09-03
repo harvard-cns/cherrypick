@@ -24,7 +24,7 @@ class ClouderaHadoop(ClouderaPackage):
         # Everyone is a worker
         self.workers_ = cloudera.nodes
 
-        if len(cloudera.nodes) > 10:
+        if len(cloudera.nodes) > 6:
             # If we have more than ten cloudera nodes, dedicate the master to management
             self.workers_ = cloudera.nodes[1:]
 
@@ -88,7 +88,8 @@ class ClouderaHadoop(ClouderaPackage):
         self.master.script('sudo -u hdfs hdfs dfs -chmod -R 1777 /tmp/hadoop-yarn')
 
     def restart_yarn(self):
-        self.master.script('sudo service hadoop-yarn-nodemanager restart')
+        #self.master.script('sudo service hadoop-yarn-nodemanager restart')
+        self.master.script('sudo service hadoop-yarn-nodemanager stop')
         self.master.script('sudo service hadoop-yarn-resourcemanager restart')
         self.master.script('sudo service hadoop-mapreduce-historyserver restart')
         parallel(lambda vm: vm.script('sudo service hadoop-yarn-nodemanager restart'), self.workers)
@@ -106,7 +107,7 @@ class ClouderaHadoop(ClouderaPackage):
             return ram_mb - 3 * 1024
         elif ram_mb > 10*1024:
             return ram_mb - 2 * 1024
-        return max(512, ram_mb - 2300)
+        return max(512, ram_mb - 1500)
 
     def setup_configuration(self):
         def setup_yarn(vm, is_master):
@@ -114,6 +115,7 @@ class ClouderaHadoop(ClouderaPackage):
                 data_directories = vm.data_directories()
                 total_cpu = vm.cpus()
                 total_memory = self.available_memory(vm)
+                ammem = min(1536, total_memory - 100)
                 mapmem = total_memory/total_cpu
                 reducemem = mapmem
                 mapmemheap = int(0.8 * mapmem)
@@ -135,6 +137,7 @@ class ClouderaHadoop(ClouderaPackage):
                     clustermem=total_memory*len(self.nodes),
                     clustercpu=total_cpu*len(self.nodes),
                     localdirs=','.join(localdirs),
+                    ammem=ammem,
                     mapmem=mapmem,
                     mapmemheap=mapmemheap,
                     reducemem=reducemem,

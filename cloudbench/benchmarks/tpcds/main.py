@@ -10,7 +10,7 @@ import time
 
 TIMEOUT=21600
 
-TPCDS_SCALE=10
+TPCDS_SCALE=20
 GenerateTPCDS = """
 import com.databricks.spark.sql.perf.tpcds.Tables
 
@@ -18,7 +18,7 @@ val dsdgenDir = "/home/ubuntu/tpcds-kit/tools"
 val dbName = "tpcdsdb"
 val scaleFactor = {scaleFactor}
 val tables = new Tables(sqlContext, dsdgenDir, scaleFactor)
-val location = "/user/spark"
+val location = "/user/spark/tpcds"
 val format = "parquet"
 
 tables.genData(location, format, true, true, true, true, true)
@@ -33,7 +33,8 @@ val dbName = "tpcdsdb"
 sqlContext.sql("USE tpcdsdb")
 sc.setLogLevel("WARN")
 val tpcds = new TPCDS()
-val expt = tpcds.runExperiment(tpcds.interactiveQueries)
+val expt = tpcds.runExperiment(tpcds.cherryPickQueries)
+expt.waitForFinish(10000)
 
 expt.html
 exit
@@ -108,7 +109,7 @@ def makedirectory(name):
         os.makedirs(name)
 
 def spark_executor_memory(vm):
-    return int(spark_driver_memory(vm) / vm.cpus())
+    return int(spark_driver_memory(vm) / (2*vm.cpus()))
 
 def spark_driver_memory(vm):
     ram_mb = int(vm.memory() / (1024*1024))
@@ -124,7 +125,7 @@ def spark_driver_memory(vm):
     elif ram_mb > 10*1024:
         ret =  ram_mb - 2 * 1024
     else:
-        ret =  max(512, ram_mb - 2300)
+        ret =  max(512, ram_mb - 1300)
 
     ret -= max(400, ret*0.2)
 
@@ -139,8 +140,8 @@ def tpcds(vms, env):
     def write_file(vm, fName, content):
         vm.script("sudo cat <<EOT > {0}\n{1}\nEOT".format(fName, content))
 
-    genFile = os.path.join(SPARK_SQL_PERF_DIR, "gen.scala")
-    exeFile = os.path.join(SPARK_SQL_PERF_DIR, "exe.scala")
+    genFile = os.path.join(SPARK_SQL_PERF_DIR, "gen.cmd")
+    exeFile = os.path.join(SPARK_SQL_PERF_DIR, "exe.cmd")
 
     # 
     def load_tpcds_scripts(vm):
@@ -148,12 +149,12 @@ def tpcds(vms, env):
         write_file(vm, exeFile, ExecuteTPCDS)
 
     #
-    def exec_tpcds_script(master, script, output):
-        cmdTpl = "spark-shell --jars {0} --conf spark.driver.memory={1}m -i {2} --conf spark.executor.memory={4}m |& tee {3}"
+    def exec_tpcds_script(master, script, output, extra=""):
+        cmdTpl = "spark-shell --jars {0} --conf spark.driver.memory={1}m -i {2} --conf spark.executor.memory={4}m {5} |& tee {3}"
         cmd = cmdTpl.format(os.path.join(SPARK_SQL_PERF_DIR, 
             "target", "scala-2.10", "spark-sql-perf_2.10-0.3.2.jar"),
             spark_driver_memory(master),
-            script, output, spark_executor_memory(master))
+            script, output, spark_executor_memory(master), extra)
         master.script(cmd)
 
     
@@ -166,11 +167,29 @@ def tpcds(vms, env):
     # Save the TPC-DS scripts to remote virtual machines
     parallel(load_tpcds_scripts, vms)
 
+    directory='tpcds-' + spark.master.type + '-' + str(len(vms)) + "-results"
+    makedirectory(directory)
+    iteration=str(1)
+
     # execute scripts
     ## Generate TPCDS data
-    exec_tpcds_script(spark.master, genFile, os.path.join(SPARK_SQL_PERF_DIR, "gen.log"))
+    exec_tpcds_script(spark.master, genFile, os.path.join(SPARK_SQL_PERF_DIR, "gen.log"), "--conf spark.yarn.executor.memoryOverhead=768")
+
+    parallel(lambda vm: vm.script("sync; echo 3 > /proc/sys/vm/drop_caches"), vms)
     ## Execute TPCDS queries
+    argos_start(vms, directory, iteration)
+    start = time.time()
     exec_tpcds_script(spark.master, exeFile, os.path.join(SPARK_SQL_PERF_DIR, "exe.log"))
+    end = time.time()
+    argos_finish(vms, directory, iteration)
+
+    file_name = spark.master.type
+    with open(os.path.join(directory, str(iteration), spark.master.type + '.time'), 'w+') as f:
+        f.write('0,%s' % str(end - start))
+
+    spark.master.recv("~/spark-sql-perf/gen.log", os.path.join(directory, str(iteration), "gen.log"))
+    spark.master.recv("~/spark-sql-perf/exe.log", os.path.join(directory, str(iteration), "exe.log"))
+
 
 def run(env):
     vms = env.virtual_machines().values()

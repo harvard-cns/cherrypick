@@ -86,7 +86,7 @@
 
     <property>
         <name>yarn.scheduler.maximum-allocation-vcores</name>
-        <value>{clustercpu}</value>
+        <value>{totalcpu}</value>
     </property>
 
     <property>
@@ -101,7 +101,7 @@
 
     <property>
         <name>yarn.scheduler.maximum-allocation-mb</name>
-        <value>{clustermem}</value>
+        <value>{totalmem}</value>
     </property>
 
     <property>
@@ -111,7 +111,12 @@
 
     <property>
         <name>yarn.nodemanager.resource.cpu-vcores</name>
-        <value>{clustercpu}</value>
+        <value>{totalcpu}</value>
+    </property>
+
+    <property>
+        <name>yarn.app.mapreduce.am.resource.mb</name>
+        <value>{ammem}</value>
     </property>
 
     <property>

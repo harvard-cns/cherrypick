@@ -97,6 +97,8 @@ configExec() {
         xargs -0 bash -c './cb "$@"' --
     sleep 1
 
+    exit 0
+
     out="Exit Done"
     # Teardown
     echo "> Tearing down: $expSpec"
@@ -128,7 +130,7 @@ printConfigs() {
     # configFor "spark" "m4.large" "8" "ebs"
 
     # configFor "spark" "c4.xlarge" "4" "ebs"
-    configFor "spark" "r3.xlarge" "4" "ebs"
+    # configFor "spark" "r3.xlarge" "4" "ebs"
     # configFor "spark" "m4.xlarge" "4" "ebs"
 
     # configFor "spark" "c4.2xlarge" "2" "ebs"
@@ -136,52 +138,55 @@ printConfigs() {
     # configFor "spark" "m4.2xlarge" "2" "ebs"
 
     # configFor "spark" "c4.large" "16" "ebs"
-    configFor "spark" "c4.xlarge" "8" "ebs"
-    configFor "spark" "c4.2xlarge" "10" "ebs"
+    # configFor "spark" "c4.xlarge" "8" "ebs"
+    # configFor "spark" "c4.2xlarge" "10" "ebs"
 
-    configFor "spark" "r3.large" "16" "ebs"
-    configFor "spark" "r3.xlarge" "8" "ebs"
-    configFor "spark" "r3.2xlarge" "10" "ebs"
+    # configFor "spark" "r3.large" "16" "ebs"
+    # configFor "spark" "r3.xlarge" "8" "ebs"
+    # configFor "spark" "r3.2xlarge" "10" "ebs"
 
-    configFor "spark" "m4.large" "16" "ebs"
-    configFor "spark" "m4.xlarge" "8" "ebs"
-    configFor "spark" "m4.2xlarge" "10" "ebs"
+    # configFor "spark" "m4.large" "16" "ebs"
+    # configFor "spark" "m4.xlarge" "8" "ebs"
+    # configFor "spark" "m4.2xlarge" "10" "ebs"
 
-    configFor "spark" "c4.xlarge" "12" "ebs"
-    configFor "spark" "r3.xlarge" "12" "ebs"
-    configFor "spark" "m4.xlarge" "12" "ebs"
+    # configFor "spark" "c4.xlarge" "12" "ebs"
+    # configFor "spark" "r3.xlarge" "12" "ebs"
+    # configFor "spark" "m4.xlarge" "12" "ebs"
 
-    configFor "spark" "c4.xlarge" "16" "ebs"
-    configFor "spark" "c4.2xlarge" "4" "ebs"
-    configFor "spark" "c4.2xlarge" "6" "ebs"
+    # configFor "spark" "c4.xlarge" "16" "ebs"
+    # configFor "spark" "c4.2xlarge" "4" "ebs"
+    # configFor "spark" "c4.2xlarge" "6" "ebs"
 
-    configFor "spark" "r3.xlarge" "16" "ebs"
-    configFor "spark" "r3.2xlarge" "4" "ebs"
-    configFor "spark" "r3.2xlarge" "6" "ebs"
+    # configFor "spark" "r3.xlarge" "16" "ebs"
+    # configFor "spark" "r3.2xlarge" "4" "ebs"
+    # configFor "spark" "r3.2xlarge" "6" "ebs"
 
-    configFor "spark" "m4.xlarge" "16" "ebs"
-    configFor "spark" "m4.2xlarge" "4" "ebs"
-    configFor "spark" "m4.2xlarge" "6" "ebs"
+    # configFor "spark" "m4.xlarge" "16" "ebs"
+    # configFor "spark" "m4.2xlarge" "4" "ebs"
+    # configFor "spark" "m4.2xlarge" "6" "ebs"
 
-    configFor "spark" "c4.2xlarge" "8" "ebs"
-    configFor "spark" "r3.2xlarge" "8" "ebs"
-    configFor "spark" "m4.2xlarge" "8" "ebs"
+    # configFor "spark" "c4.2xlarge" "8" "ebs"
+    # configFor "spark" "r3.2xlarge" "8" "ebs"
+    # configFor "spark" "m4.2xlarge" "8" "ebs"
 
-    configFor "spark" "i2.xlarge" "4"  "local"
-    configFor "spark" "i2.xlarge" "8"  "local"
-    configFor "spark" "i2.xlarge" "12" "local"
-    configFor "spark" "i2.xlarge" "16" "local"
+    # configFor "spark" "i2.xlarge" "4"  "local"
+    # configFor "spark" "i2.xlarge" "8"  "local"
+    # configFor "spark" "i2.xlarge" "12" "local"
+    # configFor "spark" "i2.xlarge" "16" "local"
 
-    configFor "spark" "i2.2xlarge" "2" "local"
-    configFor "spark" "i2.2xlarge" "4" "local"
-    configFor "spark" "i2.2xlarge" "6" "local"
-    configFor "spark" "i2.2xlarge" "8" "local"
-    configFor "spark" "i2.2xlarge" "10" "local"
+    # configFor "spark" "i2.2xlarge" "2" "local"
+    # configFor "spark" "i2.2xlarge" "4" "local"
+    # configFor "spark" "i2.2xlarge" "6" "local"
+    # configFor "spark" "i2.2xlarge" "8" "local"
+    # configFor "spark" "i2.2xlarge" "10" "local"
 
     # configFor "tpch" "m4.large" "16" "ebs"
     # configFor "tpch" "c4.xlarge" "16" "ebs"
     # configFor "tpch" "r3.2xlarge" "6" "ebs"
     # configFor "tpch" "r3.large" "16" "ebs"
+    # configFor "tpch" "m4.large" "24" "ebs"
+    configFor "tpch" "c4.large" "32" "ebs"
+    # configFor "tpch" "m4.large" "40" "ebs"
 }
 
 ########################################
