@@ -1,0 +1,95 @@
+<config>
+    <locations>
+        <location name='us' location='config:us'/>
+    </locations>
+
+    <virtual-machines>
+        <virtual-machine name='vm1' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm2' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm3' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm4' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm5' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm6' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm7' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm8' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm9' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm10' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm11' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm12' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm13' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm14' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm15' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm16' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm17' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm18' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm19' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm20' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm21' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm22' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm23' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm24' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm25' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm26' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm27' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm28' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm29' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm30' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm31' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm32' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm33' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm34' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm35' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm36' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm37' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm38' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm39' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm40' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm41' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm42' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm43' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm44' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm45' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm46' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm47' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+        <virtual-machine name='vm48' storage="global:storage" virtual-network='vn1' image='config:ubuntu' type='global:instance-type' location='us'/>
+    </virtual-machines>
+
+    <virtual-networks>
+        <virtual-network name='vn1' location='us' placement-group='global:placement-group' />
+    </virtual-networks>
+
+    <security-groups>
+        <!-- <security-group name='sec1' private-port='8042' public-port='8042' protocol='tcp' virtual-machines='vm1,vm2,vm3,vm4,vm5' /> -->
+        <security-group name='sec2' private-port='8088' public-port='8088' protocol='tcp' virtual-machines='vm1,vm2,vm3,vm4,vm5' />
+    </security-groups>
+
+    <azure>
+        <config name='ubuntu' value='b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_2_LTS-amd64-server-20150309-en-us-30GB' />
+        <config name='us'   value='East US' />
+
+        <locations>
+            <add-values name='us' storage-type='LRS' /> 
+        </locations>
+        <virtual-networks>
+            <add-values name='vn1' address-range='10.0.0.0' />
+        </virtual-networks>
+    </azure>
+
+    <aws>
+        <config name='ubuntu' value='ami-1863a178' />
+        <config name='us'   value='us-west-2' />
+
+        <virtual-networks>
+            <add-values name='vn1' address-range='10.0.0.0/20' />
+        </virtual-networks>
+    </aws>
+
+    <gcloud>
+        <config name='ubuntu' value='ubuntu-14-04' />
+        <config name='us'   value='us-central1-b' />
+
+        <virtual-networks>
+            <add-values name='vn1' address-range='10.0.0.0/20' />
+        </virtual-networks>
+    </gcloud>
+</config>

@@ -2,10 +2,15 @@ from cloudbench.ssh import WaitUntilFinished, WaitForSeconds
 from cloudbench.util import Debug, parallel
 from cloudbench.cloudera.cloudera import Cloudera
 
+import os
 import re
 import time
 
 TIMEOUT=21600
+
+def makedirectory(name):
+    if not os.path.exists(name):
+        os.makedirs(name)
 
 def monitor_start(vms):
     # Start IO monitor
@@ -16,7 +21,7 @@ def monitor_start(vms):
     parallel(lambda vm: vm.script('cd argos; sudo nohup src/argos >argos.out 2>&1 &'), vms)
     time.sleep(2)
 
-def monitor_finish(vms):
+def monitor_finish(vms, directory, iteration):
     # Save IO monitor
     # parallel(lambda vm: vm.stop_monitor(), vms)
     # parallel(lambda vm: vm.download_monitor(vm.name + '-disk-usage.log'), vms)
@@ -30,11 +35,14 @@ def monitor_finish(vms):
     # Delete empty directories
     parallel(lambda vm: vm.script('find ~/argos/proc -type d -empty -delete'), vms)
 
+    subdir=os.path.join(directory, str(iteration))
+    makedirectory(subdir)
+
     # Save argos results
-    parallel(lambda vm: vm.recv('~/argos/proc', vm.name + '-proc'), vms)
+    parallel(lambda vm: vm.recv('~/argos/proc', os.path.join(subdir, vm.name + '-proc')), vms)
 
     # Save argos output
-    parallel(lambda vm: vm.recv('~/argos/argos.out', vm.name + '-argos.out'), vms)
+    parallel(lambda vm: vm.recv('~/argos/argos.out', os.path.join(subdir, vm.name + '-argos.out')), vms)
 
 
 def setup_hadoop(env, vms):
@@ -71,8 +79,18 @@ def terasort(vms, env):
     hadoop = setup_hadoop(env, vms)
     print "Master is: %s" % hadoop.master.name
 
+    directory='terasort-' + hadoop.master.type + '-' + str(len(vms)) + "-results"
+    makedirectory(directory)
+    iteration=str(1)
+
     extra_teragen_params = "-Ddfs.blocksize=512M -Dmapreduce.task.io.sort.mb=256"
-    hadoop.execute('sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar teragen {2} -D mapred.map.tasks={0} {1} /terasort-input'.format(env.param('terasort:mappers'), env.param('terasort:rows'), extra_teragen_params))
+
+    hadoop.master.execute("sudo service hadoop-hdfs-namenode restart")
+    hadoop.master.execute("sudo service hadoop-hdfs-datanode restart")
+    hadoop.master.execute("sudo service hadoop-yarn-resourcemanager restart")
+
+    mapper_count = int(4 * int(sum(map(lambda vm: vm.cpus(), vms))) * 0.8)
+    hadoop.execute('sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar teragen {2} -D mapred.map.tasks={0} {1} /terasort-input'.format(mapper_count, env.param('terasort:rows'), extra_teragen_params))
 
     # Drop file caches to be more accurate for amount of reads and writes
     parallel(lambda vm: vm.script("sync; echo 3 > /proc/sys/vm/drop_caches"), vms)
@@ -82,15 +100,15 @@ def terasort(vms, env):
     extra_terasort_params = "-Ddfs.blocksize=512M -Dmapreduce.task.io.sort.factor=100 -Dmapreduce.task.io.sort.mb=384 -Dio.file.buffer.size=131072"
     monitor_start(vms)
     hadoop.execute('/usr/bin/time -f \'%e\' -o terasort.out sudo -u hdfs hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples-2.6.0-mr1-cdh5*.jar terasort {1} -D mapred.reduce.tasks={0} /terasort-input /terasort-output >output.log 2>&1'.format(str(reducer_count), extra_terasort_params))
-    monitor_finish(vms)
+    monitor_finish(vms, directory, iteration)
 
     terasort_time = hadoop.master.script('tail -n1 terasort.out').strip()
     terasort_out = hadoop.master.script('cat output.log').strip()
-    file_name = str(time.time()) + '-' + hadoop.master.type
-    with open(file_name + ".time", 'w+') as f:
+    file_name = hadoop.master.type
+    with open(os.path.join(directory, str(iteration), file_name + ".time"), 'w+') as f:
         f.write("0," + str(terasort_time))
 
-    with open(file_name + ".out", 'w+') as f:
+    with open(os.path.join(directory, str(iteration), file_name + ".out"), 'w+') as f:
         f.write(terasort_out)
 
 def run(env):

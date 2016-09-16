@@ -185,7 +185,29 @@ printConfigs() {
     # configFor "tpch" "r3.2xlarge" "6" "ebs"
     # configFor "tpch" "r3.large" "16" "ebs"
     # configFor "tpch" "m4.large" "24" "ebs"
-    configFor "tpch" "c4.large" "32" "ebs"
+    # configFor "tpch" "c4.large" "32" "ebs"
+
+    configFor "spark" "m4.large" "24" "ebs"
+    configFor "spark" "m4.large" "32" "ebs"
+    configFor "spark" "m4.large" "40" "ebs"
+
+    configFor "spark" "m4.xlarge" "20" "ebs"
+
+    configFor "spark" "r3.xlarge" "20" "ebs"
+    configFor "spark" "r3.xlarge" "4" "ebs"
+
+    configFor "spark" "r3.large" "24" "ebs"
+    configFor "spark" "r3.large" "32" "ebs"
+    configFor "spark" "r3.large" "40" "ebs"
+
+    configFor "spark" "i2.xlarge" "20" "ebs"
+
+    configFor "spark" "c4.xlarge" "20" "ebs"
+
+    configFor "spark" "c4.large" "24" "ebs"
+    configFor "spark" "c4.large" "32" "ebs"
+    configFor "spark" "c4.large" "40" "ebs"
+
     # configFor "tpch" "m4.large" "40" "ebs"
 }
 
@@ -193,4 +215,4 @@ printConfigs() {
 # PARALLELIZATION
 ########################################
 
-printConfigs | xargs -0 -n 4 -P 3 bash -c 'configExec "$@"' --
+printConfigs | xargs -0 -n 4 -P 1 bash -c 'configExec "$@"' --

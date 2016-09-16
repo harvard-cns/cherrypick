@@ -130,6 +130,7 @@ def setup_spark_perf(env, vms):
         vm.script("cd spark-perf; sed -i '/OptionSet(\"num-partitions\", \[128\], can_scale=True),/c\    OptionSet(\"num-partitions\", [%d], can_scale=False),' config/config.py" % num_cores )
         vm.script("cd spark-perf; sed -i '/OptionSet(\"num-trials\", \[10\]),/c\    OptionSet(\"num-trials\", \[5\]),' config/config.py" )
         vm.script("cd spark-perf; sed -i '/SPARK_DRIVER_MEMORY = \"5g\"/c\SPARK_DRIVER_MEMORY = \"%dm\"' config/config.py" % spark_driver_memory(vm))
+        vm.script("cd spark-perf; sed -i '/JavaOptionSet(\"spark.storage.memoryFraction\", \[0.66\]),/c\    JavaOptionSet(\"spark.storage.memoryFraction\", \[0.66\]), JavaOptionSet(\"spark.yarn.executor.memoryOverhead\", \[500\]),' config/config.py")
     parallel(replace_line, vms)
 
 def setup_disks(env, vms):
