@@ -12,6 +12,25 @@ create two keys:
 * cloud.pem
 * cloud.key
 
+# Running the experiment
+
+Go to the script folder and use the run.sh script.  The default help is pretty
+self explanatory:
+
+>   Please add the configs that you want to run to the printConfigs
+>   function inside the script.  The syntax is:
+>
+>   > configFor \"Experiment\" \"InstanceType\" \"Machine Count\" \"Disk Type\"
+>
+>   1) Experiment: any one of: tpcds, tpch, tera, spark
+>   2) Instance type: any of the instance types in Amazon
+>   3) Instance count: number of instances in the cluster
+>   4) Disk type: ebs or empty string
+>
+>   By default the disks are set to be 2x250GB of gp2 type per instance.  
+>   Feel free to change that within this file.
+
+<!--
 cloud.key should be a 2048bit RSA key.  You can generate Azure keys with
 the openssl command or just the supplied makefile:
 
@@ -54,3 +73,4 @@ files are required:
   environment.
 
 For an example, have a look at cloudbench/benchmarks/iperf.
+-->
