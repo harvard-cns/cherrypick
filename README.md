@@ -23,8 +23,11 @@ self explanatory:
 >   > configFor "Experiment" "InstanceType" "Machine Count" "Disk Type"
 >
 >   1) Experiment: any one of: tpcds, tpch, tera, spark
+>
 >   2) Instance type: any of the instance types in Amazon
+>
 >   3) Instance count: number of instances in the cluster
+>
 >   4) Disk type: ebs or empty string
 >
 >   By default the disks are set to be 2x250GB of gp2 type per instance.  
