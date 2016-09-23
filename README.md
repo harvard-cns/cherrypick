@@ -20,7 +20,7 @@ self explanatory:
 >   Please add the configs that you want to run to the printConfigs
 >   function inside the script.  The syntax is:
 >
->   > configFor \"Experiment\" \"InstanceType\" \"Machine Count\" \"Disk Type\"
+>   > configFor "Experiment" "InstanceType" "Machine Count" "Disk Type"
 >
 >   1) Experiment: any one of: tpcds, tpch, tera, spark
 >   2) Instance type: any of the instance types in Amazon
