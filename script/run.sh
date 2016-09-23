@@ -17,7 +17,7 @@ configExec() {
     expName=$(echo $expName | xargs)
 
     if [ -z $expName ]; then
-        echo "Variable length is zero ..."
+        echo "No such experiment ($experiment) was found."
         exit 1
     fi
 
