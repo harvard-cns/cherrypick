@@ -10,7 +10,7 @@ import time
 
 TIMEOUT=21600
 
-TPCDS_SCALE=20
+TPCDS_SCALE=2
 GenerateTPCDS = """
 import com.databricks.spark.sql.perf.tpcds.Tables
 

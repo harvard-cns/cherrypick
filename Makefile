@@ -9,12 +9,13 @@ azure_key:
 	@chmod 600 ./config/cloud.key
 
 gcloud_key:
+	@echo "Creating Google cloud keys"
 	@cd config && printf "cloudbench:" > gcloud_ssh_key
 	@cd config && ssh-keygen -y -f cloud.key >> gcloud_ssh_key
 	@cat ./config/gcloud_ssh_key
 
 aws_key:
-	@echo "Creating google cloud keys"
+	@echo "Creating AWS cloud keys"
 	@cd config && openssl rsa -pubout -in cloud.key -out cloud.pub
 
 test:
