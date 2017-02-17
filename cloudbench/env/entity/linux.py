@@ -21,7 +21,8 @@ class Linux(RsyncTransfer, SecureShell, LinuxInstaller, LinuxFileSystem):
 
     def cpus(self):
         if not self._cpus:
-            self._cpus = int(self.script("nproc"))
+            nproc_out = self.script("nproc")
+            self._cpus = int(nproc_out)
         return self._cpus
 
     def root_disk(self):

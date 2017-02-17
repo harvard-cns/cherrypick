@@ -40,6 +40,9 @@ configExec() {
 
     # Spark Regression Parameters
     SPARK_ML_EXAMPLES=250000
+
+    # Spark KMeans Parameters
+    # ...
     
     # TPCDS Parameters
     # ...
@@ -72,6 +75,11 @@ configExec() {
     if [ $exp = "spark" ]; then
         # Nothing to do for spark regression right now
         params="$params,sparkml:examples=$SPARK_ML_EXAMPLES"
+    fi
+
+    # If exp is Kmeans
+    if [ $exp = "kmeans" ]; then
+        params="$params,kmeans:examples=$SPARK_ML_EXAMPLES"
     fi
 
     # If exp is Terasort
@@ -139,6 +147,7 @@ configFor() {
 
 printConfigs() {
     echo -n
+    configFor "kmeans" "m4.xlarge" "4" "ebs"
     # configFor "spark" "c4.large" "24" "ebs"
     # configFor "tpcds" "i2.xlarge" "32" ""
 }
@@ -151,7 +160,7 @@ function inside the script.  The syntax is:
 
 > configFor \"Experiment\" \"InstanceType\" \"Machine Count\" \"Disk Type\"
 
-1) Experiment: any one of: tpcds, tpch, tera, spark
+1) Experiment: any one of: tpcds, tpch, tera, spark, kmeans
 2) Instance type: any of the instance types in Amazon
 3) Instance count: number of instances in the cluster
 4) Disk type: ebs or empty string

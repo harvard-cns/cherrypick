@@ -13,8 +13,6 @@ import constants
 
 from util import Debug
 
-COUNT=0
-
 class Command(object):
     """A Command object is a SSH process that is getting executed on the
     remoted server.
@@ -43,7 +41,6 @@ class Command(object):
             fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
         def run_cmd(ssh, command, private_key = constants.DEFAULT_VM_PRIVATE_KEY):
-            global COUNT
             cmd = "ssh -i {} -q -o StrictHostKeyChecking=no "\
                    "{} -- {}".format(private_key,
                    ssh.connect_string, command)
@@ -78,11 +75,11 @@ class Command(object):
                             return True
                         queue.put(r)
                     except Exception as e:
+                        print e
                         raise e
 
 
         self._process = run_cmd(self._ssh, self._cmd)
-
         self._queue   = Queue.Queue()
 
         self._thread  = threading.Thread(

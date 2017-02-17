@@ -17,6 +17,7 @@ function mainScript() {
     benchmarkDir="${cloudbench}/cloudbench/benchmarks"
     expDir="${benchmarkDir}/${UUID}"
     topoFile="${benchmarkDir}/templates/c${size}.xml"
+    echo $topoFile, $expDir, $benchmarkDir
 
     if [ ! -f $topoFile ]; then
         exit 1

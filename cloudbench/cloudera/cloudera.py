@@ -354,7 +354,7 @@ class Cloudera(object):
         parallel(lambda vm: vm.script(write_template('etc-hosts', '/etc/hosts', hosts=hosts)), self.nodes)
 
     def setup_hostnames(self):
-        parallel(lambda vm: vm.script("cat {name} | sudo tee /etc/hostname".format(name=vm.name)), self.nodes)
+        parallel(lambda vm: vm.script("echo {name} | sudo tee /etc/hostname".format(name=vm.name)), self.nodes)
         parallel(lambda vm: vm.script("sudo hostname {name}".format(name=vm.name)), self.nodes)
 
     def setup(self):
